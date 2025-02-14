@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+@theme {
+    --color-main: #C2A04C;
+    --color-solid : #151515;
+}
+
+body {
+    background: linear-gradient(to top, #C2A04C 0%, #000000 100%);
+    background-attachment: fixed;
+    font-family: "Cairo", serif;
+}
