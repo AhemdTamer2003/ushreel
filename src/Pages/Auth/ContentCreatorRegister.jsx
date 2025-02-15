@@ -28,7 +28,7 @@ function ContentCreatorRegister() {
                 </div>
 
                 {/* Right Side Form */}
-                <div className="bg-solid px-24 py-8 text-white w-full ">
+                <div className="bg-solid lg:px-24 px-6 py-8 text-white w-full ">
                     <h2 className="text-xl font-bold text-yellow-500 mb-2">Register Now</h2>
                     <p className="text-sm text-gray-400 mb-6">And make events more easier</p>
 
