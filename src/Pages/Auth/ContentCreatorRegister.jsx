@@ -1,10 +1,9 @@
+import React, { useState } from 'react'
 import { Button, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import React, { useState } from "react";
-import usherregisterimg from "../../assets/AuthAssets/usherpic.png";
+import contentcreatorregisterimg from "../../assets/AuthAssets/contentcreatorregister.png";
 import AuthInput from "./Auth-Components/AuthInput";
-import { Link } from "react-router-dom";
-
-function UsherRegister() {
+import { Link } from 'react-router-dom';
+function ContentCreatorRegister() {
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -12,6 +11,7 @@ function UsherRegister() {
         password: "",
         confirmPassword: "",
         gender: "",
+        feild: "",
         phoneNumber: "",
         birthDate: null,
     });
@@ -19,13 +19,12 @@ function UsherRegister() {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
-
     return (
         <div className="bg-solid">
             <div className="grid lg:grid-cols-2 grid-cols-1  rounded-lg shadow-lg  ">
                 {/* Left Side Image */}
                 <div className="lg:flex hidden">
-                    <img src={usherregisterimg} className="w-full max-h-screen object-cover" alt="Usher Register" />
+                    <img src={contentcreatorregisterimg} className="w-full max-h-screen object-cover" alt="Usher Register" />
                 </div>
 
                 {/* Right Side Form */}
@@ -43,9 +42,20 @@ function UsherRegister() {
                         <AuthInput LabelText="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
                         <AuthInput LabelText="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
                     </div>
+                    <FormControl fullWidth sx={{ backgroundColor: "white", marginTop: ".5rem", borderRadius: '4px' }}>
+                        <InputLabel>Feild</InputLabel>
+                        <Select
+                            name="feild"
+                            value={formData.feild}
+                            onChange={handleChange}
+                        >
+                            <MenuItem value="Real Maker">Real Maker</MenuItem>
+                            <MenuItem value="Stroy Teller">Stroy Teller</MenuItem>
+                        </Select>
+                    </FormControl>
 
                     {/* Gender Selection */}
-                    <FormControl fullWidth sx={{ backgroundColor: "white", marginBottom: ".5rem", marginTop: ".5rem", borderRadius: '2px' }}>
+                    <FormControl fullWidth sx={{ backgroundColor: "white", marginBottom: ".5rem", marginTop: ".5rem", borderRadius: '4px' }}>
                         <InputLabel>Gender</InputLabel>
                         <Select
                             name="gender"
@@ -59,11 +69,7 @@ function UsherRegister() {
 
                     <AuthInput LabelText="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} />
 
-                    {/* Date Picker */}
-                    <input
-                        type="date"
-                        className="py-4 w-full text-black bg-white my-2 px-2 rounded-sm"
-                    />
+
 
                     {/* Register Button */}
                     <div className="w-full flex justify-center items-center">
@@ -79,7 +85,7 @@ function UsherRegister() {
                 </div>
             </div>
         </div>
-    );
+    )
 }
 
-export default UsherRegister;
+export default ContentCreatorRegister

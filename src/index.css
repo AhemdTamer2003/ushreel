@@ -2,7 +2,8 @@
 
 @theme {
     --color-main: #C2A04C;
-    --color-solid : #151515;
+    --color-solid: #151515;
+    --color-black-transport: rgba(0, 0, 0, 0.81);
 }
 
 body {

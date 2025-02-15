@@ -10,12 +10,13 @@ function Register() {
             src: registerpic1,
             Title: "Companies",
             discription: "Find the best of the best to achieve your marketing goals in one place with one click",
-
+            to: "/companyrtegister"
         },
         {
             src: registerpic2,
             Title: "Content-Creator",
             discription: "If you think that you have the passion in content creation join our team now and share your art",
+            to: "/contentcreatorregister",
         },
         {
             src: registerpic3,
