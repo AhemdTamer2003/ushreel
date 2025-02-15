@@ -32,7 +32,7 @@ function AuthInput({ LabelText, type = "text", sx, value, onChange, name }) {
                 ...sx,
             }}
             InputLabelProps={{
-                style: { color: "#C2A04C" }, // Ensure label color is applied properly
+                style: { color: "#333" }, // Ensure label color is applied properly
             }}
             InputProps={{
                 endAdornment:

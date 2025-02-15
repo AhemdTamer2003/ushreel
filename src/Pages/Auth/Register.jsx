@@ -10,7 +10,7 @@ function Register() {
             src: registerpic1,
             Title: "Companies",
             discription: "Find the best of the best to achieve your marketing goals in one place with one click",
-            to : "/usherregister"
+
         },
         {
             src: registerpic2,
@@ -21,6 +21,7 @@ function Register() {
             src: registerpic3,
             Title: "Ushers",
             discription: "If you have the knowledge and experience in ushering field join our team and make events much easier",
+            to: "/usherregister"
         }
     ];
 
