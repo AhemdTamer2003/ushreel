@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [exploreDropdown, setExploreDropdown] = useState(false);
 
   return (
     <nav className="bg-main text-white px-6 py-3">
@@ -14,24 +15,63 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 text-sm">
-          <a href="#" className="hover:underline">Home</a>
-          <div className="relative group">
-            <button className="hover:underline flex items-center">
+          <Link to="/" className="hover:underline">Home</Link>
+
+          {/* Explore Dropdown */}
+          <div className="relative">
+            <button
+              className="hover:underline flex items-center"
+              onClick={() => setExploreDropdown(!exploreDropdown)}
+              aria-haspopup="true"
+              aria-expanded={exploreDropdown}
+            >
               Explore <span className="ml-1">▼</span>
             </button>
-            <div className="absolute hidden group-hover:block bg-white text-black py-2 mt-1 w-32 rounded shadow-lg">
-              <a href="#" className="block px-4 py-2 hover:bg-gray-200">Option 1</a>
-              <a href="#" className="block px-4 py-2 hover:bg-gray-200">Option 2</a>
-            </div>
+            {exploreDropdown && (
+              <div className="absolute bg-white text-black py-2 mt-1 w-40 rounded shadow-lg">
+                <Link 
+                  to="/usherregister" 
+                  className="block px-4 py-2 hover:bg-gray-200"
+                  onClick={() => setExploreDropdown(false)}
+                >
+                  Usher
+                </Link>
+                <Link 
+                  to="/companyrtegister" 
+                  className="block px-4 py-2 hover:bg-gray-200"
+                  onClick={() => setExploreDropdown(false)}
+                >
+                  Company
+                </Link>
+                <Link 
+                  to="/contentcreatorregister" 
+                  className="block px-4 py-2 hover:bg-gray-200"
+                  onClick={() => setExploreDropdown(false)}
+                >
+                  Content Creator
+                </Link>
+              </div>
+            )}
           </div>
-          <a href="#" className="hover:underline">About</a>
-          <a href="#" className="hover:underline">Contact</a>
+
+          <Link to="/about" className="hover:underline">About</Link>
+          <Link to="/contact" className="hover:underline">Contact</Link>
         </div>
 
-        {/* Desktop Buttons */}
+        {/* Desktop Register/Login */}
         <div className="hidden md:flex space-x-2">
-          <Link to={'/login'} className="px-3 py-1 border border-black bg-white text-black rounded">Login</Link>
-          <Link to={'/register'} className="px-3 py-1 bg-black text-white rounded">Register</Link>
+          <Link 
+            to="/login" 
+            className="px-3 py-1 border border-black bg-white text-black rounded"
+          >
+            Login
+          </Link>
+          <Link 
+            to="/register" 
+            className="px-3 py-1 bg-black text-white rounded"
+          >
+            Register
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -43,12 +83,76 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden flex flex-col items-center mt-3 space-y-4">
-          <a href="#" className="hover:underline">Home</a>
-          <a href="#" className="hover:underline">Explore</a>
-          <a href="#" className="hover:underline">About</a>
-          <a href="#" className="hover:underline">Contact</a>
-          <button className="px-3 py-1 border border-black bg-white text-black rounded w-full">Login</button>
-          <button className="px-3 py-1 bg-black text-white rounded w-full">Register</button>
+          <Link to="/" className="hover:underline" onClick={() => setIsOpen(false)}>
+            Home
+          </Link>
+          
+          {/* Mobile Explore Dropdown */}
+          <div className="text-center">
+            <button
+              className="hover:underline"
+              onClick={() => setExploreDropdown(!exploreDropdown)}
+              aria-haspopup="true"
+              aria-expanded={exploreDropdown}
+            >
+              Explore ▼
+            </button>
+            {exploreDropdown && (
+              <div className="flex flex-col bg-white text-black mt-2 rounded shadow-lg">
+                <Link 
+                  to="/usherregister" 
+                  className="px-4 py-2 hover:bg-gray-200"
+                  onClick={() => {
+                    setExploreDropdown(false);
+                    setIsOpen(false);
+                  }}
+                >
+                  Usher
+                </Link>
+                <Link 
+                  to="/companyrtegister" 
+                  className="px-4 py-2 hover:bg-gray-200"
+                  onClick={() => {
+                    setExploreDropdown(false);
+                    setIsOpen(false);
+                  }}
+                >
+                  Company
+                </Link>
+                <Link 
+                  to="/contentcreatorregister" 
+                  className="px-4 py-2 hover:bg-gray-200"
+                  onClick={() => {
+                    setExploreDropdown(false);
+                    setIsOpen(false);
+                  }}
+                >
+                  Content Creator
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <Link to="/about" className="hover:underline" onClick={() => setIsOpen(false)}>
+            About
+          </Link>
+          <Link to="/contact" className="hover:underline" onClick={() => setIsOpen(false)}>
+            Contact
+          </Link>
+          <Link 
+            to="/login" 
+            className="px-3 py-1 border border-black bg-white text-black rounded w-full text-center"
+            onClick={() => setIsOpen(false)}
+          >
+            Login
+          </Link>
+          <Link 
+            to="/register" 
+            className="px-3 py-1 bg-black text-white rounded w-full text-center"
+            onClick={() => setIsOpen(false)}
+          >
+            Register
+          </Link>
         </div>
       )}
     </nav>
