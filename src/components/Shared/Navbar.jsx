@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { Link } from "react-router-dom";
+import './Navbar.css'; // Import custom CSS for animation
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,8 +11,11 @@ export default function Navbar() {
   return (
     <nav className="bg-main text-white px-6 py-3">
       <div className="flex justify-between items-center">
-        {/* Logo */}
-        <div className="text-lg font-bold">UsheReel</div>
+        {/* Logo with split animation for pulling and pushing */}
+        <div className="logo-container">
+          <span className="ushe logo-animate">ushR</span>
+          <span className="eel logo-animate">eel</span>
+        </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 text-sm">
