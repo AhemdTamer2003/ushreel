@@ -82,7 +82,7 @@ function Login() {
               to="/register"
               className="underline text-main hover:text-main-dark transition-colors"
             >
-              Sign up
+              Create Account
             </Link>
           </div>
         </form>
