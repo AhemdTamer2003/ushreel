@@ -9,6 +9,8 @@ import CompanyRegister from './Pages/Auth/CompanyRegister';
 import ForgetPassword from './Pages/Auth/ForgetPassword';
 import ResetPassword from './Pages/Auth/ResetPassword';
 import VerifyOtp from './Pages/Auth/VerifyOtp';  // Import VerifyOtp component
+import ContactUs from "./Pages/Auth/ContactForm";
+
 
 function App() {
   return (
@@ -23,6 +25,7 @@ function App() {
         <Route path='/forgetpassword' element={<ForgetPassword />} />
         <Route path='/resetpassword' element={<ResetPassword />} />
         <Route path='/verifyotp' element={<VerifyOtp />} /> {/* Add the route for OTP verification */}
+        <Route path="/contact" element={<ContactUs />} />
       </Routes>
     </>
   );
