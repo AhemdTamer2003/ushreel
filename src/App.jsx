@@ -8,9 +8,9 @@ import ContentCreatorRegister from './Pages/Auth/ContentCreatorRegister';
 import CompanyRegister from './Pages/Auth/CompanyRegister';
 import ForgetPassword from './Pages/Auth/ForgetPassword';
 import ResetPassword from './Pages/Auth/ResetPassword';
-import VerifyOtp from './Pages/Auth/VerifyOtp';  // Import VerifyOtp component
+import VerifyOtp from './Pages/Auth/VerifyOtp';
 import ContactUs from "./Pages/Auth/ContactForm";
-
+import AboutUs from "./Pages/Auth/AboutUs";
 
 function App() {
   return (
@@ -24,8 +24,9 @@ function App() {
         <Route path='/companyregister' element={<CompanyRegister />} />
         <Route path='/forgetpassword' element={<ForgetPassword />} />
         <Route path='/resetpassword' element={<ResetPassword />} />
-        <Route path='/verifyotp' element={<VerifyOtp />} /> {/* Add the route for OTP verification */}
+        <Route path='/verifyotp' element={<VerifyOtp />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/about" element={<AboutUs />} /> {/* Changed from "/aboutUs" to "/about" */}
       </Routes>
     </>
   );

@@ -33,60 +33,105 @@ export default function ContactUs() {
       setErrors({});
       setSuccessMessage("Your message has been sent successfully!");
       console.log("Form Submitted:", formData);
-      setFormData({ name: "", email: "", message: "" }); // Reset form
+      setFormData({ name: "", email: "", message: "" });
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#C2A04C' }}>
-      <div className="max-w-lg w-full p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold text-center mb-4">Contact Us</h2>
+    <div className="flex justify-center items-center min-h-screen px-4 py-8" 
+         style={{
+           background: 'linear-gradient(to top, #C2A04C 0%, #000000 100%)',
+           backgroundAttachment: 'fixed'
+         }}>
+      <div className="bg-[#151515]/80 backdrop-blur-sm lg:w-1/2 w-full rounded-xl p-8 border border-[#C2A04C]/20 shadow-lg">
+        <h2 className="text-4xl text-[#C2A04C] font-extrabold text-center mb-8 font-cairo">
+          Contact Us
+        </h2>
+        
         {successMessage && (
-          <p className="text-green-600 text-center">{successMessage}</p>
+          <div className="bg-[#C2A04C]/10 border border-[#C2A04C] text-[#C2A04C] px-4 py-3 rounded-lg mb-6 text-center">
+            {successMessage}
+          </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block font-medium">Name</label>
+            <label className="block text-[#C2A04C] font-semibold mb-2 font-cairo">
+              Name
+            </label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 bg-black/30 border border-[#C2A04C]/20 rounded-lg text-white focus:border-[#C2A04C] focus:outline-none transition-colors duration-300"
+              placeholder="Enter your name"
             />
-            {errors.name && <p className="text-red-500">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-red-400 mt-1 text-sm">{errors.name}</p>
+            )}
           </div>
 
           <div>
-            <label className="block font-medium">Email</label>
+            <label className="block text-[#C2A04C] font-semibold mb-2 font-cairo">
+              Email
+            </label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 bg-black/30 border border-[#C2A04C]/20 rounded-lg text-white focus:border-[#C2A04C] focus:outline-none transition-colors duration-300"
+              placeholder="Enter your email"
             />
-            {errors.email && <p className="text-red-500">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-400 mt-1 text-sm">{errors.email}</p>
+            )}
           </div>
 
           <div>
-            <label className="block font-medium">Message</label>
+            <label className="block text-[#C2A04C] font-semibold mb-2 font-cairo">
+              Message
+            </label>
             <textarea
               name="message"
               value={formData.message}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              rows="5"
+              className="w-full p-3 bg-black/30 border border-[#C2A04C]/20 rounded-lg text-white focus:border-[#C2A04C] focus:outline-none transition-colors duration-300"
+              placeholder="Enter your message"
             />
-            {errors.message && <p className="text-red-500">{errors.message}</p>}
+            {errors.message && (
+              <p className="text-red-400 mt-1 text-sm">{errors.message}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+            className="w-full bg-[#C2A04C] text-[#151515] py-3 px-6 rounded-lg font-bold hover:bg-[#C2A04C]/90 transition-colors duration-300 font-cairo"
           >
             Send Message
           </button>
         </form>
+
+        {/* Additional Contact Information */}
+        <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
+          <div className="p-4 bg-black/20 rounded-lg border border-[#C2A04C]/10">
+            <div className="text-[#C2A04C] text-2xl mb-2">📍</div>
+            <h4 className="text-[#C2A04C] font-semibold mb-1 font-cairo">Address</h4>
+            <p className="text-gray-300">123 Business Street, Suite 100</p>
+          </div>
+          <div className="p-4 bg-black/20 rounded-lg border border-[#C2A04C]/10">
+            <div className="text-[#C2A04C] text-2xl mb-2">📧</div>
+            <h4 className="text-[#C2A04C] font-semibold mb-1 font-cairo">Email</h4>
+            <p className="text-gray-300">contact@ushreel.com</p>
+          </div>
+          <div className="p-4 bg-black/20 rounded-lg border border-[#C2A04C]/10">
+            <div className="text-[#C2A04C] text-2xl mb-2">📱</div>
+            <h4 className="text-[#C2A04C] font-semibold mb-1 font-cairo">Phone</h4>
+            <p className="text-gray-300">+1 (555) 123-4567</p>
+          </div>
+        </div>
       </div>
     </div>
   );
