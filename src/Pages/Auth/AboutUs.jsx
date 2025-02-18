@@ -18,10 +18,9 @@ function AboutUs() {
         <p className="text-lg text-gray-200 mb-8 text-center leading-relaxed text-xl font-bold font-cairo 
                       transform transition-all duration-300 hover:text-[#C2A04C]
                       motion-safe:animate-fadeIn motion-safe:animate-delay-200">
-          We are a passionate team dedicated to providing innovative solutions. 
-          Our goal is to connect companies with talented professionals, whether 
-          for offline or online events. We work hard to bring the best experiences 
-          and match the right people with the right opportunities.
+        USHREEL is a marketing solution that links online and offline engagement for businesses.
+         It helps brands connect with their audience through different touchpoints. 
+         By combining digital content and offline ushering services, USHREEL offers a complete approach to promoting brands and interacting with customers.
         </p>
         
         <div className="grid md:grid-cols-2 gap-8">
@@ -34,10 +33,11 @@ function AboutUs() {
               Our Mission
             </h3>
             <p className="text-gray-200 leading-relaxed text-xl font-bold font-cairo">
-              Our mission is to empower companies by connecting them with skilled 
-              ushers and content creators who can make their events stand out. 
-              We strive to provide a seamless and efficient platform for talent 
-              management.
+            USHREEL is more than just a marketing service . it’s a comprehensive engagement solution that 
+transforms the way businesses connect with their audience.
+ By integrating digital innovation with 
+real-world interactions, USHREEL empowers brands to build stronger connections and amplify 
+their marketing impact.
             </p>
           </div>
           
@@ -50,9 +50,15 @@ function AboutUs() {
               Our Vision
             </h3>
             <p className="text-gray-200 leading-relaxed text-xl font-bold font-cairo">
-              We envision a world where companies can effortlessly find the right 
-              people for their events. Through our platform, we aim to make talent 
-              discovery as simple and efficient as possible.
+            USHREEL’s approach focuses on seamlessly integrating digital and physical engagement strategies, enabling businesses to optimize their reach and impact.
+
+
+
+
+
+
+
+
             </p>
           </div>
         </div>

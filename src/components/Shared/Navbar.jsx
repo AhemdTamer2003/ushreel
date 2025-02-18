@@ -9,7 +9,6 @@ export default function Navbar() {
   const [exploreDropdown, setExploreDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -32,26 +31,17 @@ export default function Navbar() {
       <div className="flex justify-between items-center">
         
         {/* Animated Logo with Pendulum Effect */}
-        <div className="logo flex items-center text-2xl font-extrabold">
-          <motion.span
-            className="ushe"
-            initial={{ rotate: -30, x: -20 }}
-            animate={{ rotate: [0, -30, 0], x: [0, -20, 0] }}
-            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          >
-            ushe
-          </motion.span>
-          
-          <span className="letter-R text-yellow-400 mx-2">R</span>
-          
-          <motion.span
-            className="eel"
-            initial={{ rotate: 30, x: 20 }}
-            animate={{ rotate: [0, 30, 0], x: [0, 20, 0] }}
-            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          >
-            eel
-          </motion.span>
+        <div className="logo flex items-center text-2xl font-extrabold relative">
+          <motion.div className="usheReel">
+            <span className="letter">u</span>
+            <span className="letter">s</span>
+            <span className="letter">h</span>
+            <span className="letter">e</span>
+            <span className="letter letter-R">R</span>
+            <span className="letter">e</span>
+            <span className="letter">e</span>
+            <span className="letter">l</span>
+          </motion.div>
         </div>
 
         {/* Desktop Navigation */}
