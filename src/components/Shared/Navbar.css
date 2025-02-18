@@ -24,11 +24,11 @@
   .letter {
     font-weight: bold;
     font-size: 1.5rem;
-    color: white;
+    color: rgb(0, 0, 0);
   }
   
   .highlight-R {
-    color: #000000; /* Gold color for 'R' */
+    color: #ffffff; /* Gold color for 'R' */
   }
   
   /* Navigation Links */
