@@ -45,7 +45,7 @@ function ContentCreatorRegister() {
                     <FormControl fullWidth sx={{ backgroundColor: "white", marginTop: ".5rem", borderRadius: '4px' }}>
                         <InputLabel>Field</InputLabel>
                         <Select
-                            name="field"
+                            name="feild"
                             value={formData.feild}
                             onChange={handleChange}
                         >
