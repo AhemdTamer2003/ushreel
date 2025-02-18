@@ -124,7 +124,7 @@ export default function ContactUs() {
           <div className="p-4 bg-black/20 rounded-lg border border-[#C2A04C]/10">
             <div className="text-[#C2A04C] text-2xl mb-2">📧</div>
             <h4 className="text-[#C2A04C] font-semibold mb-1 font-cairo">Email</h4>
-            <p className="text-gray-300">contact@ushreel.com</p>
+            <p className="text-gray-300">contact@ushereel.com</p>
           </div>
           <div className="p-4 bg-black/20 rounded-lg border border-[#C2A04C]/10">
             <div className="text-[#C2A04C] text-2xl mb-2">📱</div>

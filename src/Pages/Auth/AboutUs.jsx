@@ -18,7 +18,7 @@ function AboutUs() {
         <p className="text-lg text-gray-200 mb-8 text-center leading-relaxed text-xl font-bold font-cairo 
                       transform transition-all duration-300 hover:text-[#C2A04C]
                       motion-safe:animate-fadeIn motion-safe:animate-delay-200">
-        USHREEL is a marketing solution that links online and offline engagement for businesses.
+        USHEREEL is a marketing solution that links online and offline engagement for businesses.
          It helps brands connect with their audience through different touchpoints. 
          By combining digital content and offline ushering services, USHREEL offers a complete approach to promoting brands and interacting with customers.
         </p>
@@ -33,7 +33,7 @@ function AboutUs() {
               Our Mission
             </h3>
             <p className="text-gray-200 leading-relaxed text-xl font-bold font-cairo">
-            USHREEL is more than just a marketing service . it’s a comprehensive engagement solution that 
+            USHEREEL is more than just a marketing service . it’s a comprehensive engagement solution that 
 transforms the way businesses connect with their audience.
  By integrating digital innovation with 
 real-world interactions, USHREEL empowers brands to build stronger connections and amplify 

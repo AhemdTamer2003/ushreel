@@ -19,14 +19,13 @@ function ResetPassword() {
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
     } else {
-      // Handle successful password reset (e.g., API call or success message)
       console.log("Password reset successful");
-      navigate('/login'); // Redirect to login page after resetting the password
+      navigate('/login'); 
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen px-4" style={{ backgroundColor: '#C2A04C' }}>
+    <div className="flex justify-center items-center h-screen px-4">
       <div className="bg-black-transport lg:w-1/3 w-full rounded-xl p-6 mt-6">
         <h2 className="text-2xl text-main font-bold text-center text-white">Reset Password</h2>
         <p className="text-xl text-white my-4 text-center">Enter your new password below</p>
@@ -41,21 +40,13 @@ function ResetPassword() {
             variant="outlined"
             sx={{
               marginBottom: '1rem',
-              backgroundColor: '#2A2A2A',  // Dark background for input fields
+              backgroundColor: '#2A2A2A',
               '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: '#D4A537', // Border color
-                },
-                '&:hover fieldset': {
-                  borderColor: '#FF9900',  // Border color on hover
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#FF9900',  // Border color when focused
-                },
+                '& fieldset': { borderColor: '#D4A537' },
+                '&:hover fieldset': { borderColor: '#FF9900' },
+                '&.Mui-focused fieldset': { borderColor: '#FF9900' },
               },
-              '& .MuiInputLabel-root': {
-                color: '#FF9900',  // Label color
-              },
+              '& .MuiInputLabel-root': { color: '#FF9900' },
             }}
           />
           <TextField
@@ -68,21 +59,13 @@ function ResetPassword() {
             variant="outlined"
             sx={{
               marginBottom: '1rem',
-              backgroundColor: '#2A2A2A',  // Dark background for input fields
+              backgroundColor: '#2A2A2A',
               '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: '#D4A537', // Border color
-                },
-                '&:hover fieldset': {
-                  borderColor: '#FF9900',  // Border color on hover
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#FF9900',  // Border color when focused
-                },
+                '& fieldset': { borderColor: '#D4A537' },
+                '&:hover fieldset': { borderColor: '#FF9900' },
+                '&.Mui-focused fieldset': { borderColor: '#FF9900' },
               },
-              '& .MuiInputLabel-root': {
-                color: '#FF9900',  // Label color
-              },
+              '& .MuiInputLabel-root': { color: '#FF9900' },
             }}
           />
           {error && <p className="text-red-500 text-center">{error}</p>}
@@ -90,13 +73,7 @@ function ResetPassword() {
             <Button
               type="submit"
               variant="contained"
-              sx={{
-                backgroundColor: "#D4A537", // Golden color for the button
-                width: '50%',
-                '&:hover': {
-                  backgroundColor: '#FF9900', // Orange on hover
-                },
-              }}
+              sx={{ backgroundColor: "#D4A537", width: '50%', '&:hover': { backgroundColor: '#FF9900' } }}
             >
               Reset Password
             </Button>

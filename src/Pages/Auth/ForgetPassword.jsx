@@ -63,7 +63,7 @@ function ForgetPassword() {
             <Button
               type="submit"
               variant="contained"
-              sx={{ backgroundColor: "#D4A537", width: '50%' }}
+              sx={{ backgroundColor: "#C2A04C", width: '50%' }}
             >
               Send Reset Link
             </Button>

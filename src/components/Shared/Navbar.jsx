@@ -31,26 +31,22 @@ export default function Navbar() {
       <div className="nav-container">
         {/* Logo */}
         <div className="logo-container">
-          <div className="usheReel">
-            <span className="letter">u</span>
-            <span className="letter">s</span>
-            <span className="letter">h</span>
-            <span className="letter">e</span>
-            <span className="letter highlight-R">R</span>
-            <span className="letter">e</span>
-            <span className="letter">e</span>
-            <span className="letter">l</span>
+          <div className="UsheReel">
+            <span className="letter capital">U</span>
+            <span className="letter">she</span>
+            <span className="letter capital highlight-R">R</span>
+            <span className="letter">eel</span>
           </div>
         </div>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6 text-sm">
-          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/" className="nav-link nav-bold">Home</Link>
 
           {/* Explore Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
-              className="nav-link"
+              className="nav-link nav-bold"
               onClick={handleDropdownToggle}
               aria-haspopup="true"
               aria-expanded={exploreDropdown ? "true" : "false"}
@@ -65,14 +61,14 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          <Link to="/about" className="nav-link">About</Link>
-          <Link to="/contact" className="nav-link">Contact Us</Link>
+          <Link to="/about" className="nav-link nav-bold">About</Link>
+          <Link to="/contact" className="nav-link nav-bold">Contact Us</Link>
         </div>
 
         {/* Desktop Login/Register */}
         <div className="hidden md:flex space-x-2">
-          <Link to="/login" className="px-3 py-1 border border-black bg-white text-black rounded">Login</Link>
-          <Link to="/register" className="px-3 py-1 bg-black text-white rounded">Register</Link>
+          <Link to="/login" className="auth-btn login-btn">Login</Link>
+          <Link to="/register" className="auth-btn register-btn">Register</Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -84,11 +80,11 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden flex flex-col items-center mt-3 space-y-4">
-          <Link to="/" className="nav-link" onClick={handleLinkClick}>Home</Link>
+          <Link to="/" className="nav-link nav-bold" onClick={handleLinkClick}>Home</Link>
 
           {/* Mobile Explore Dropdown */}
           <div className="text-center">
-            <button className="nav-link" onClick={handleDropdownToggle}>
+            <button className="nav-link nav-bold" onClick={handleDropdownToggle}>
               Explore ▼
             </button>
             {exploreDropdown && (
@@ -100,10 +96,10 @@ export default function Navbar() {
             )}
           </div>
 
-          <Link to="/about" className="nav-link" onClick={handleLinkClick}>About</Link>
-          <Link to="/contact" className="nav-link" onClick={handleLinkClick}>Contact</Link>
-          <Link to="/login" className="px-3 py-1 border border-black bg-white text-black rounded w-full text-center" onClick={handleLinkClick}>Login</Link>
-          <Link to="/register" className="px-3 py-1 bg-black text-white rounded w-full text-center" onClick={handleLinkClick}>Register</Link>
+          <Link to="/about" className="nav-link nav-bold" onClick={handleLinkClick}>About</Link>
+          <Link to="/contact" className="nav-link nav-bold" onClick={handleLinkClick}>Contact</Link>
+          <Link to="/login" className="auth-btn login-btn w-full text-center" onClick={handleLinkClick}>Login</Link>
+          <Link to="/register" className="auth-btn register-btn w-full text-center" onClick={handleLinkClick}>Register</Link>
         </div>
       )}
     </nav>
