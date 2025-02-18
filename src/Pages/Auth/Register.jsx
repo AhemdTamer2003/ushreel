@@ -10,7 +10,7 @@ function Register() {
             src: registerpic1,
             Title: "Companies",
             discription: "Find the best of the best to achieve your marketing goals in one place with one click",
-            to: "/companyrtegister"
+            to: "/companyregister"
         },
         {
             src: registerpic2,
