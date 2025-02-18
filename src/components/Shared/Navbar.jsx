@@ -67,7 +67,7 @@ export default function Navbar() {
           </div>
 
           <Link to="/about" className="nav-link">About</Link>
-          <Link to="/contact" className="nav-link">Contact</Link>
+          <Link to="/contact" className="nav-link">Contact Us</Link>
         </div>
 
         {/* Desktop Login/Register */}
