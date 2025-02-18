@@ -1,61 +1,141 @@
-/* Navbar Container */
-nav {
+/* Navbar Styles */
+.navbar {
     background-color: #c49b42;
-    color: white;
-    padding: 12px 24px;
+    padding: 0.5rem 2rem;
+    width: 100%;
+  }
+  
+  .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+  }
+  
+  /* Logo */
+  .usheReel {
+    display: flex;
+    gap: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  
+  .letter {
     font-weight: bold;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 1.5rem;
+    color: white;
+  }
+  
+  .highlight-R {
+    color: #ffcc00; /* Gold color for 'R' */
+  }
+  
+  /* Navigation Links */
+  .nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+  
+  .nav-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Dropdown Styles */
+  .dropdown {
     position: relative;
-}
-
-/* Logo Container */
-.logo {
+  }
+  
+  .dropdown-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+  }
+  
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    min-width: 160px;
+    z-index: 1000;
+    margin-top: 0.5rem;
+  }
+  
+  .dropdown-item {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* Auth Buttons */
+  .auth-buttons {
     display: flex;
-    align-items: center;
-    font-size: 2rem;
-    font-weight: 800;
-    position: relative;
-}
-
-/* Fade flash effect for each letter */
-@keyframes fadeFlash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-}
-
-/* Apply fade-flash animation to each letter with different delays */
-.usheReel .letter {
-    display: inline-block;
-    animation: fadeFlash 1.5s infinite ease-in-out;
-}
-
-/* Set different delays for each letter to make them flash one by one */
-.usheReel .letter:nth-child(1) { animation-delay: 0s; }
-.usheReel .letter:nth-child(2) { animation-delay: 0.2s; }
-.usheReel .letter:nth-child(3) { animation-delay: 0.4s; }
-.usheReel .letter:nth-child(4) { animation-delay: 0.6s; }
-.usheReel .letter:nth-child(5) { animation-delay: 0.8s; }
-.usheReel .letter:nth-child(6) { animation-delay: 1s; }
-.usheReel .letter:nth-child(7) { animation-delay: 1.2s; }
-.usheReel .letter:nth-child(8) { animation-delay: 1.4s; }
-
-/* Flashing color for the letter 'R' */
-.letter-R {
-    color: #ffcc00;
-}
-
-/* Optional: Create a swinging movement if needed */
-@keyframes usheSwing {
-    0% { transform: translate(-50px, -30px) rotate(0deg); }
-    50% { transform: translate(-20px, 20px) rotate(15deg); }
-    100% { transform: translate(0px, 0px) rotate(0deg); }
-}
-
-/* Applying movement animations */
-.usheReel {
-    display: inline-block;
-    animation: usheSwing 1.5s infinite ease-in-out alternate;
-    transform-origin: center;
-}
+    gap: 0.5rem;
+  }
+  
+  .login-btn {
+    padding: 0.4rem 1rem;
+    border: 1px solid #000;
+    border-radius: 4px;
+    background-color: white;
+    color: black;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .register-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    background-color: black;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  /* Mobile Menu */
+  .mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  @media (max-width: 768px) {
+    .nav-links, .auth-buttons {
+      display: none;
+    }
+  
+    .mobile-menu-btn {
+      display: block;
+    }
+  
+    .mobile-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #c49b42;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      z-index: 1000;
+    }
+  }
