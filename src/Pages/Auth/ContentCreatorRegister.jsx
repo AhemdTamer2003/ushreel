@@ -43,9 +43,9 @@ function ContentCreatorRegister() {
                         <AuthInput LabelText="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
                     </div>
                     <FormControl fullWidth sx={{ backgroundColor: "white", marginTop: ".5rem", borderRadius: '4px' }}>
-                        <InputLabel>Feild</InputLabel>
+                        <InputLabel>Field</InputLabel>
                         <Select
-                            name="feild"
+                            name="field"
                             value={formData.feild}
                             onChange={handleChange}
                         >
