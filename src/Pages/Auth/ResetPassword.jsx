@@ -26,7 +26,7 @@ function ResetPassword() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen px-4" style={{ backgroundColor: '#D4A537' }}>
+    <div className="flex justify-center items-center h-screen px-4" style={{ backgroundColor: '#C2A04C' }}>
       <div className="bg-black-transport lg:w-1/3 w-full rounded-xl p-6 mt-6">
         <h2 className="text-2xl text-main font-bold text-center text-white">Reset Password</h2>
         <p className="text-xl text-white my-4 text-center">Enter your new password below</p>
