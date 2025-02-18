@@ -50,7 +50,9 @@ function ContentCreatorRegister() {
                             onChange={handleChange}
                         >
                             <MenuItem value="Real Maker">Real Maker</MenuItem>
-                            <MenuItem value="Stroy Teller">Stroy Teller</MenuItem>
+                            <MenuItem value="Video Editor">Video Editor</MenuItem>
+                            <MenuItem value="Video Editor">Photographer</MenuItem>
+
                         </Select>
                     </FormControl>
 
