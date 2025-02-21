@@ -49,7 +49,7 @@ function ContentCreatorRegister() {
                             value={formData.feild}
                             onChange={handleChange}
                         >
-                            <MenuItem value="Real Maker">Real Maker</MenuItem>
+                            <MenuItem value="Real Maker">Reel Maker</MenuItem>
                             <MenuItem value="Video Editor">Video Editor</MenuItem>
                             <MenuItem value="Video Editor">Photographer</MenuItem>
 
