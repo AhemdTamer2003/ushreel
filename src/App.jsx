@@ -11,6 +11,7 @@ import ResetPassword from './Pages/Auth/ResetPassword';
 import VerifyOtp from './Pages/Auth/VerifyOtp';
 import ContactUs from "./Pages/Auth/ContactForm";
 import AboutUs from "./Pages/Auth/AboutUs";
+import Team from "./Pages/Auth/Team"; // Add this import
 
 function App() {
   return (
@@ -26,7 +27,8 @@ function App() {
         <Route path='/resetpassword' element={<ResetPassword />} />
         <Route path='/verifyotp' element={<VerifyOtp />} />
         <Route path="/contact" element={<ContactUs />} />
-        <Route path="/about" element={<AboutUs />} /> {/* Changed from "/aboutUs" to "/about" */}
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/team" element={<Team />} /> {/* Add this route */}
       </Routes>
     </>
   );

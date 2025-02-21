@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 function AboutUs() {
   return (
@@ -18,9 +19,9 @@ function AboutUs() {
         <p className="text-lg text-gray-200 mb-8 text-center leading-relaxed text-xl font-bold font-cairo 
                       transform transition-all duration-300 hover:text-[#C2A04C]
                       motion-safe:animate-fadeIn motion-safe:animate-delay-200">
-        USHEREEL is a marketing solution that links online and offline engagement for businesses.
-         It helps brands connect with their audience through different touchpoints. 
-         By combining digital content and offline ushering services, USHREEL offers a complete approach to promoting brands and interacting with customers.
+          USHEREEL is a marketing solution that links online and offline engagement for businesses.
+          It helps brands connect with their audience through different touchpoints. 
+          By combining digital content and offline ushering services, USHREEL offers a complete approach to promoting brands and interacting with customers.
         </p>
         
         <div className="grid md:grid-cols-2 gap-8">
@@ -33,11 +34,10 @@ function AboutUs() {
               Our Mission
             </h3>
             <p className="text-gray-200 leading-relaxed text-xl font-bold font-cairo">
-            USHEREEL is more than just a marketing service . it’s a comprehensive engagement solution that 
-transforms the way businesses connect with their audience.
- By integrating digital innovation with 
-real-world interactions, USHREEL empowers brands to build stronger connections and amplify 
-their marketing impact.
+              USHEREEL is more than just a marketing service. it's a comprehensive engagement solution that 
+              transforms the way businesses connect with their audience. By integrating digital innovation with 
+              real-world interactions, USHREEL empowers brands to build stronger connections and amplify 
+              their marketing impact.
             </p>
           </div>
           
@@ -50,15 +50,7 @@ their marketing impact.
               Our Vision
             </h3>
             <p className="text-gray-200 leading-relaxed text-xl font-bold font-cairo">
-            USHREEL’s approach focuses on seamlessly integrating digital and physical engagement strategies, enabling businesses to optimize their reach and impact.
-
-
-
-
-
-
-
-
+              USHREEL's approach focuses on seamlessly integrating digital and physical engagement strategies, enabling businesses to optimize their reach and impact.
             </p>
           </div>
         </div>
@@ -104,6 +96,15 @@ their marketing impact.
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="flex justify-center mt-8">
+          <Link to="/team" 
+                className="bg-[#C2A04C] text-black px-8 py-3 rounded-full font-bold 
+                           transform transition-all duration-300 hover:scale-105 
+                           hover:shadow-lg hover:shadow-[#C2A04C]/30">
+            View Team
+          </Link>
         </div>
       </div>
     </div>
