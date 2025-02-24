@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaBuilding, FaGlobe, FaBriefcase } from 'react-icons/fa';
+import CompanyEditProfileDialog from './CompanyEditProfileDialog';
 
 function CompanyProfile() {
   const navigate = useNavigate();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [companyData, setCompanyData] = useState({
     id: "COM123456",
     name: "Future Makers",
@@ -47,7 +49,6 @@ function CompanyProfile() {
       marketingPreference: preference
     }));
 
-    // Navigate to the marketing selection page with the selected preference
     navigate('/marketing-selection', { 
       state: { 
         type: preference,
@@ -56,8 +57,21 @@ function CompanyProfile() {
     });
   };
 
-  const handleEditProfile = () => {
-    navigate('/company-edit-profile', { state: { companyData } });
+  const handleEditClick = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsEditDialogOpen(false);
+  };
+
+  const handleSaveProfile = (updatedData) => {
+    setCompanyData(prev => ({
+      ...prev,
+      ...updatedData
+    }));
+    // Add your API call here
+    console.log('Updated Profile Data:', updatedData);
   };
 
   const handleViewProject = (projectId) => {
@@ -124,7 +138,7 @@ function CompanyProfile() {
             </div>
 
             <button 
-              onClick={handleEditProfile}
+              onClick={handleEditClick}
               className="mt-6 bg-[#C2A04C] text-black px-6 py-2 rounded-full 
                        hover:bg-[#C2A04C]/80 transition-all duration-300
                        transform hover:scale-105 hover:shadow-lg"
@@ -228,6 +242,14 @@ function CompanyProfile() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <CompanyEditProfileDialog
+        open={isEditDialogOpen}
+        handleClose={handleCloseDialog}
+        companyData={companyData}
+        onSave={handleSaveProfile}
+      />
     </div>
   );
 }

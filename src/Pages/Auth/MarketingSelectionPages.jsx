@@ -14,17 +14,17 @@ function MarketingSelectionPages() {
     {
       id: 'reel',
       title: 'Reel Maker',
-      image: '/path-to-reel-maker-image.jpg'
+      image: '/src/assets/AuthAssets/registerpic2.png'
     },
     {
       id: 'photographer',
       title: 'Photographer',
-      image: '/path-to-photographer-image.jpg'
+      image: '/src/assets/AuthAssets/contentcreatorregister.png'
     },
     {
       id: 'video',
       title: 'Video Editor',
-      image: '/path-to-video-editor-image.jpg'
+      image: '/src/assets/AuthAssets/0_qKaI6a9c0mZi5P1P.jpg'
     }
   ];
 
@@ -32,22 +32,22 @@ function MarketingSelectionPages() {
     {
       id: 'sales',
       title: 'Sales Usher',
-      image: '/path-to-sales-usher-image.jpg'
+      image: '/src/assets/AuthAssets/image 3.png'
     },
     {
       id: 'activation',
       title: 'Activation Usher',
-      image: '/path-to-activation-usher-image.jpg'
+      image: '/src/assets/AuthAssets/image 4.png'
     },
     {
       id: 'registration',
       title: 'Registration Usher',
-      image: '/path-to-registration-usher-image.jpg'
+      image: '/src/assets/AuthAssets/image 5.png'
     },
     {
       id: 'crowd',
       title: 'Crowd Management Usher',
-      image: '/path-to-crowd-management-image.jpg'
+      image: '/src/assets/AuthAssets/image.png'
     }
   ];
 
@@ -98,7 +98,7 @@ function MarketingSelectionPages() {
       case 'offline':
         return (
           <>
-            <h2 className="text-white text-center text-xl mb-6">
+            <h2 className="text-white text-center text-xl mb-6 font-bold">
               you can choose as many as your event needs
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
