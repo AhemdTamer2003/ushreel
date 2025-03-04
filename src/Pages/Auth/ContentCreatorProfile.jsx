@@ -1,72 +1,104 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaCamera, FaInstagram, FaFacebook } from 'react-icons/fa';
 
 function ContentCreatorProfile() {
   const navigate = useNavigate();
-  const [ccData, setCCData] = useState({
-    id: "15245637",
-    name: "Samir William",
-    email: "testmail@gmail.com",
-    phone: "01010101010",
-    location: "Cairo,Egypt",
-    gender: "Male",
-    specialty: "Photography",
-    profileImage: "/path-to-profile-image.jpg",
-    photos: [
-      "/path-to-photo-1.jpg",
-      "/path-to-photo-2.jpg"
-    ],
-    experiences: [
-      {
-        id: 1,
-        description: "exhibition coverage at Cairo ict",
-      },
-      {
-        id: 2,
-        description: "Amr Diab concert coverage",
-      }
-    ],
-    offers: [
-      {
-        id: 1,
-        company: "Future Makers",
-        message: "Future Makers has sent you a request to join them at their next conference"
-      },
-      {
-        id: 2,
-        company: "Future Makers",
-        message: "Future Makers has sent you a request to join them at their next conference"
-      }
-    ],
-    companyOpinions: [
-      {
-        company: "Future Makers",
-        rating: "⭐⭐⭐⭐⭐"
-      },
-      {
-        company: "UnReal",
-        rating: "⭐⭐⭐⭐"
-      }
-    ],
-    platformLinks: {
-      instagram: "@Samir_wiliam",
-      facebook: "Samir Wiliam"
+  const location = useLocation();
+  
+  const [ccData, setCCData] = useState(() => {
+    const savedData = localStorage.getItem('ccProfileData');
+    const locationData = location.state?.profileData;
+    
+    if (locationData) {
+      localStorage.setItem('ccProfileData', JSON.stringify(locationData));
+      return locationData;
+    } else if (savedData) {
+      return JSON.parse(savedData);
+    } else {
+      return {
+        id: "15245637",
+        name: "Samir William",
+        email: "testmail@gmail.com",
+        phone: "01010101010",
+        location: "Cairo,Egypt",
+        gender: "Male",
+        specialty: "Photography",
+        profileImage: "/path-to-profile-image.jpg",
+        photos: [
+          "/path-to-photo-1.jpg",
+          "/path-to-photo-2.jpg"
+        ],
+        experiences: [
+          {
+            id: 1,
+            description: "exhibition coverage at Cairo ict",
+          },
+          {
+            id: 2,
+            description: "Amr Diab concert coverage",
+          }
+        ],
+        offers: [
+          {
+            id: 1,
+            company: "Future Makers",
+            message: "Future Makers has sent you a request to join them at their next conference",
+            status: null
+          },
+          {
+            id: 2,
+            company: "Future Makers",
+            message: "Future Makers has sent you a request to join them at their next conference",
+            status: null
+          }
+        ],
+        companyOpinions: [
+          {
+            company: "Future Makers",
+            rating: "⭐⭐⭐⭐⭐"
+          },
+          {
+            company: "UnReal",
+            rating: "⭐⭐⭐⭐"
+          }
+        ],
+        platformLinks: {
+          instagram: "@Samir_wiliam",
+          facebook: "Samir Wiliam"
+        }
+      };
     }
   });
+
+  useEffect(() => {
+    localStorage.setItem('ccProfileData', JSON.stringify(ccData));
+  }, [ccData]);
 
   const handleEditClick = () => {
     navigate('/content-creator-edit', { state: { profileData: ccData } });
   };
 
-  const handleViewOffer = (offerId) => {
-    // Handle viewing offer details
-    console.log('Viewing offer:', offerId);
+  const handleAcceptOffer = (offerId) => {
+    setCCData(prev => ({
+      ...prev,
+      offers: prev.offers.map(offer =>
+        offer.id === offerId ? { ...offer, status: 'accepted' } : offer
+      )
+    }));
+  };
+
+  const handleDeclineOffer = (offerId) => {
+    setCCData(prev => ({
+      ...prev,
+      offers: prev.offers.map(offer =>
+        offer.id === offerId ? { ...offer, status: 'declined' } : offer
+      )
+    }));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      {/* Navigation Bar */}
       <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
         <div className="text-black font-bold text-xl">UsheReel</div>
         <div className="flex space-x-4">
@@ -159,17 +191,41 @@ function ContentCreatorProfile() {
             <div className="space-y-4">
               {ccData.offers.map(offer => (
                 <div key={offer.id} 
-                     className="bg-[#C2A04C] p-4 rounded-lg flex justify-between items-center
+                     className="bg-[#C2A04C] p-4 rounded-lg
                               transform transition-all duration-300 hover:scale-[1.02]">
-                  <p className="text-black">{offer.message}</p>
-                  <button 
-                    onClick={() => handleViewOffer(offer.id)}
-                    className="bg-black text-[#C2A04C] px-4 py-2 rounded-full
-                             hover:bg-black/80 transition-all duration-300
-                             transform hover:scale-105"
-                  >
-                    View
-                  </button>
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-black font-semibold">{offer.company}</p>
+                    {offer.status && (
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        offer.status === 'accepted' 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-red-500 text-white'
+                      }`}>
+                        {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-black mb-3">{offer.message}</p>
+                  {!offer.status && (
+                    <div className="flex justify-end space-x-3">
+                      <button 
+                        onClick={() => handleDeclineOffer(offer.id)}
+                        className="bg-black text-red-500 px-4 py-2 rounded-full
+                                 hover:bg-black/80 transition-all duration-300
+                                 transform hover:scale-105"
+                      >
+                        Decline
+                      </button>
+                      <button 
+                        onClick={() => handleAcceptOffer(offer.id)}
+                        className="bg-black text-green-500 px-4 py-2 rounded-full
+                                 hover:bg-black/80 transition-all duration-300
+                                 transform hover:scale-105"
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
