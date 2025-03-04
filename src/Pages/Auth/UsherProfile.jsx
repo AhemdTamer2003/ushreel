@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBirthdayCake } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaBirthdayCake, FaEdit } from 'react-icons/fa';
 import EditProfileDialog from './EditProfileDialog';
+import ExperienceEditDialog from './ExperienceEditDialog';
 
 function UsherProfile() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isExperienceDialogOpen, setIsExperienceDialogOpen] = useState(false);
   const [usherData, setUsherData] = useState({
     id: "162673764",
     name: "Jack William",
@@ -30,12 +32,14 @@ function UsherProfile() {
       {
         id: 1,
         company: "Future Makers",
-        message: "Future Makers has sent you a request to join them at their next conference"
+        message: "Future Makers has sent you a request to join them at their next conference",
+        status: null
       },
       {
         id: 2,
         company: "Future Makers",
-        message: "Future Makers has sent you a request to join them at their next conference"
+        message: "Future Makers has sent you a request to join them at their next conference",
+        status: null
       }
     ],
     companyOpinions: [
@@ -58,6 +62,14 @@ function UsherProfile() {
     setIsEditDialogOpen(false);
   };
 
+  const handleEditExperiences = () => {
+    setIsExperienceDialogOpen(true);
+  };
+
+  const handleCloseExperienceDialog = () => {
+    setIsExperienceDialogOpen(false);
+  };
+
   const handleSaveProfile = (updatedData) => {
     setUsherData({
       ...usherData,
@@ -65,6 +77,41 @@ function UsherProfile() {
     });
     // Add your API call here to update the profile in the backend
     console.log('Updated Profile Data:', updatedData);
+  };
+
+  const handleSaveExperiences = (updatedExperiences) => {
+    setUsherData(prev => ({
+      ...prev,
+      experiences: updatedExperiences
+    }));
+    // Add your API call here
+    console.log('Updated Experiences:', updatedExperiences);
+  };
+
+  const handleAcceptOffer = (offerId) => {
+    setUsherData(prev => ({
+      ...prev,
+      offers: prev.offers.map(offer => 
+        offer.id === offerId 
+          ? { ...offer, status: 'accepted' }
+          : offer
+      )
+    }));
+    // Add your API call here
+    console.log('Accepted offer:', offerId);
+  };
+
+  const handleDeclineOffer = (offerId) => {
+    setUsherData(prev => ({
+      ...prev,
+      offers: prev.offers.map(offer => 
+        offer.id === offerId 
+          ? { ...offer, status: 'declined' }
+          : offer
+      )
+    }));
+    // Add your API call here
+    console.log('Declined offer:', offerId);
   };
 
   return (
@@ -141,13 +188,42 @@ function UsherProfile() {
             <div className="space-y-4">
               {usherData.offers.map(offer => (
                 <div key={offer.id} 
-                     className="bg-[#C2A04C] p-4 rounded-lg flex justify-between items-center
-                              transform transition-all duration-300 hover:scale-[1.02]">
-                  <p className="text-black">{offer.message}</p>
-                  <button className="bg-black text-[#C2A04C] px-4 py-2 rounded-full
-                                   hover:bg-black/80 transition-colors duration-300">
-                    View
-                  </button>
+                     className="bg-[#C2A04C] p-4 rounded-lg
+                              transform transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-black font-semibold">{offer.company}</p>
+                    {offer.status && (
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        offer.status === 'accepted' 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-red-500 text-white'
+                      }`}>
+                        {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-black mb-3">{offer.message}</p>
+                  {!offer.status && (
+                    <div className="flex justify-end space-x-3">
+                      <button 
+                        onClick={() => handleDeclineOffer(offer.id)}
+                        className="bg-black text-red-500 px-4 py-2 rounded-full
+                                 hover:bg-black/80 transition-all duration-300
+                                 transform hover:scale-105"
+                      >
+                        Decline
+                      </button>
+                      <button 
+                        onClick={() => handleAcceptOffer(offer.id)}
+                        className="bg-black text-green-500 px-4 py-2 rounded-full
+                                 hover:bg-black/80 transition-all duration-300
+                                 transform hover:scale-105"
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -155,7 +231,15 @@ function UsherProfile() {
 
           {/* Experiences Section */}
           <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Experiences</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-[#C2A04C] text-xl font-bold">Experiences</h3>
+              <button
+                onClick={handleEditExperiences}
+                className="text-[#C2A04C] hover:text-[#C2A04C]/80 transition-colors duration-300"
+              >
+                <FaEdit size={20} />
+              </button>
+            </div>
             <div className="space-y-4">
               {usherData.experiences.map(exp => (
                 <div key={exp.id} className="text-gray-300">
@@ -187,6 +271,14 @@ function UsherProfile() {
         handleClose={handleCloseDialog}
         profileData={usherData}
         onSave={handleSaveProfile}
+      />
+
+      {/* Edit Experiences Dialog */}
+      <ExperienceEditDialog
+        open={isExperienceDialogOpen}
+        handleClose={handleCloseExperienceDialog}
+        experiences={usherData.experiences}
+        onSave={handleSaveExperiences}
       />
     </div>
   );

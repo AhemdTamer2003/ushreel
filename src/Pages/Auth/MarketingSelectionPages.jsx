@@ -6,13 +6,14 @@ function MarketingSelectionPages() {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedItems, setSelectedItems] = useState([]);
+  const [error, setError] = useState('');
 
   // Get the type from location state (online, offline, or both)
   const marketingType = location.state?.type || 'both';
 
   const contentCreatorOptions = [
     {
-      id: 'reel',
+      id: 'reelMaker',
       title: 'Reel Maker',
       image: '/src/assets/AuthAssets/registerpic2.png'
     },
@@ -22,7 +23,7 @@ function MarketingSelectionPages() {
       image: '/src/assets/AuthAssets/contentcreatorregister.png'
     },
     {
-      id: 'video',
+      id: 'videoEditor',
       title: 'Video Editor',
       image: '/src/assets/AuthAssets/0_qKaI6a9c0mZi5P1P.jpg'
     }
@@ -45,7 +46,7 @@ function MarketingSelectionPages() {
       image: '/src/assets/AuthAssets/image 5.png'
     },
     {
-      id: 'crowd',
+      id: 'crowdManagement',
       title: 'Crowd Management Usher',
       image: '/src/assets/AuthAssets/image.png'
     }
@@ -58,12 +59,22 @@ function MarketingSelectionPages() {
       }
       return [...prev, id];
     });
+    setError(''); // Clear any previous error
   };
 
   const handleNext = () => {
-    // Handle the selection and navigate to the next step
-    console.log('Selected items:', selectedItems);
-    // Add your navigation logic here
+    if (selectedItems.length === 0) {
+      setError('Please select at least one option');
+      return;
+    }
+
+    navigate('/form-description', { 
+      state: { 
+        selectedItems,
+        marketingType,
+        companyData: location.state?.companyData
+      } 
+    });
   };
 
   const handleBack = () => {
@@ -74,95 +85,141 @@ function MarketingSelectionPages() {
     switch (marketingType) {
       case 'online':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {contentCreatorOptions.map((option) => (
-              <div
-                key={option.id}
-                onClick={() => handleSelect(option.id)}
-                className={`cursor-pointer rounded-lg overflow-hidden transform transition-all duration-300
-                          ${selectedItems.includes(option.id) ? 'ring-2 ring-[#C2A04C] scale-105' : 'hover:scale-105'}`}
-              >
-                <img
-                  src={option.image}
-                  alt={option.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4 bg-black/60">
-                  <h3 className="text-[#C2A04C] text-lg font-bold text-center">{option.title}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'offline':
-        return (
-          <>
-            <h2 className="text-white text-center text-xl mb-6 font-bold">
-              you can choose as many as your event needs
+          <div className="space-y-6">
+            <h2 className="text-[#C2A04C] text-2xl font-bold text-center mb-6">
+              Select Content Creator Types
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {usherOptions.map((option) => (
-                <div
-                  key={option.id}
-                  onClick={() => handleSelect(option.id)}
-                  className={`cursor-pointer rounded-lg overflow-hidden transform transition-all duration-300
-                            ${selectedItems.includes(option.id) ? 'ring-2 ring-[#C2A04C] scale-105' : 'hover:scale-105'}`}
-                >
-                  <img
-                    src={option.image}
-                    alt={option.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4 bg-black/60">
-                    <h3 className="text-[#C2A04C] text-lg font-bold text-center">{option.title}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        );
-
-      case 'both':
-        return (
-          <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {contentCreatorOptions.map((option) => (
                 <div
                   key={option.id}
                   onClick={() => handleSelect(option.id)}
                   className={`cursor-pointer rounded-lg overflow-hidden transform transition-all duration-300
-                            ${selectedItems.includes(option.id) ? 'ring-2 ring-[#C2A04C] scale-105' : 'hover:scale-105'}`}
+                            ${selectedItems.includes(option.id) 
+                              ? 'ring-2 ring-[#C2A04C] scale-105 shadow-lg shadow-[#C2A04C]/20' 
+                              : 'hover:scale-105 hover:shadow-lg hover:shadow-[#C2A04C]/10'}`}
                 >
-                  <img
-                    src={option.image}
-                    alt={option.title}
-                    className="w-full h-48 object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={option.image}
+                      alt={option.title}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 transition-opacity duration-300
+                                  hover:opacity-0"/>
+                  </div>
                   <div className="p-4 bg-black/60">
                     <h3 className="text-[#C2A04C] text-lg font-bold text-center">{option.title}</h3>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        );
+
+      case 'offline':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-[#C2A04C] text-2xl font-bold text-center mb-6">
+              Select Usher Types
+            </h2>
+            <p className="text-white text-center text-lg mb-6">
+              You can choose as many as your event needs
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {usherOptions.map((option) => (
                 <div
                   key={option.id}
                   onClick={() => handleSelect(option.id)}
                   className={`cursor-pointer rounded-lg overflow-hidden transform transition-all duration-300
-                            ${selectedItems.includes(option.id) ? 'ring-2 ring-[#C2A04C] scale-105' : 'hover:scale-105'}`}
+                            ${selectedItems.includes(option.id) 
+                              ? 'ring-2 ring-[#C2A04C] scale-105 shadow-lg shadow-[#C2A04C]/20' 
+                              : 'hover:scale-105 hover:shadow-lg hover:shadow-[#C2A04C]/10'}`}
                 >
-                  <img
-                    src={option.image}
-                    alt={option.title}
-                    className="w-full h-48 object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={option.image}
+                      alt={option.title}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 transition-opacity duration-300
+                                  hover:opacity-0"/>
+                  </div>
                   <div className="p-4 bg-black/60">
                     <h3 className="text-[#C2A04C] text-lg font-bold text-center">{option.title}</h3>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        );
+
+      case 'both':
+        return (
+          <div className="space-y-12">
+            <div>
+              <h2 className="text-[#C2A04C] text-2xl font-bold text-center mb-6">
+                Select Content Creator Types
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {contentCreatorOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    onClick={() => handleSelect(option.id)}
+                    className={`cursor-pointer rounded-lg overflow-hidden transform transition-all duration-300
+                              ${selectedItems.includes(option.id) 
+                                ? 'ring-2 ring-[#C2A04C] scale-105 shadow-lg shadow-[#C2A04C]/20' 
+                                : 'hover:scale-105 hover:shadow-lg hover:shadow-[#C2A04C]/10'}`}
+                  >
+                    <div className="relative">
+                      <img
+                        src={option.image}
+                        alt={option.title}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 transition-opacity duration-300
+                                    hover:opacity-0"/>
+                    </div>
+                    <div className="p-4 bg-black/60">
+                      <h3 className="text-[#C2A04C] text-lg font-bold text-center">{option.title}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-[#C2A04C] text-2xl font-bold text-center mb-6">
+                Select Usher Types
+              </h2>
+              <p className="text-white text-center text-lg mb-6">
+                You can choose as many as your event needs
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {usherOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    onClick={() => handleSelect(option.id)}
+                    className={`cursor-pointer rounded-lg overflow-hidden transform transition-all duration-300
+                              ${selectedItems.includes(option.id) 
+                                ? 'ring-2 ring-[#C2A04C] scale-105 shadow-lg shadow-[#C2A04C]/20' 
+                                : 'hover:scale-105 hover:shadow-lg hover:shadow-[#C2A04C]/10'}`}
+                  >
+                    <div className="relative">
+                      <img
+                        src={option.image}
+                        alt={option.title}
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 transition-opacity duration-300
+                                    hover:opacity-0"/>
+                    </div>
+                    <div className="p-4 bg-black/60">
+                      <h3 className="text-[#C2A04C] text-lg font-bold text-center">{option.title}</h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
@@ -196,12 +253,21 @@ function MarketingSelectionPages() {
 
           {renderContent()}
 
+          {error && (
+            <div className="mt-4 text-red-500 text-center">
+              {error}
+            </div>
+          )}
+
           <div className="mt-8 flex justify-end">
             <button
               onClick={handleNext}
-              className="flex items-center bg-[#C2A04C] text-black px-6 py-2 rounded-full
-                       hover:bg-[#C2A04C]/80 transition-all duration-300
-                       transform hover:scale-105"
+              className={`flex items-center px-6 py-2 rounded-full
+                        transition-all duration-300 transform hover:scale-105
+                        ${selectedItems.length === 0 
+                          ? 'bg-gray-500 cursor-not-allowed' 
+                          : 'bg-[#C2A04C] hover:bg-[#C2A04C]/80'} 
+                        text-black`}
               disabled={selectedItems.length === 0}
             >
               Next <FaArrowRight className="ml-2" />

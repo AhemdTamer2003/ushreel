@@ -17,6 +17,8 @@ import ContentCreatorProfile from './Pages/Auth/ContentCreatorProfile';
 import ContentCreatorEditProfile from './Pages/Auth/ContentCreatorEditProfile';
 import CompanyProfile from './Pages/Auth/CompanyProfile';
 import MarketingSelectionPages from './Pages/Auth/MarketingSelectionPages';
+import FormDescription from './Pages/Auth/FormDescription';
+
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
         <Route path="/content-creator-edit" element={<ContentCreatorEditProfile />} />
         <Route path="/company-profile" element={<CompanyProfile />} />
         <Route path="/marketing-selection" element={<MarketingSelectionPages />} />
+        <Route path="/form-description" element={<FormDescription />} />
+
       </Routes>
     </>
   );
