@@ -1,9 +1,11 @@
-// Login.jsx
 import React, { useState } from 'react';
 import AuthInput from './Auth-Components/AuthInput';
 import { Button } from '@mui/material';
 import loginpic from '../../assets/AuthAssets/loginbackground.png';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -16,12 +18,25 @@ function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement your login logic
-    console.log("Logging in with:", formData);
-    // On success, navigate somewhere (e.g., Home)
-    // navigate('/');
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BASEURL}/auth/login`, formData);
+      const { token, role } = response.data;
+      localStorage.setItem('token', token);
+      toast.success("Login successful!");
+      if (role == "usher") {
+        navigate('/usher-profile')
+      }
+      else if (role == "company") {
+        navigate('/company-profile')
+      }
+      else if (role == "contentCreator") {
+        navigate('/content-creator-profile');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
+    }
   };
 
   return (

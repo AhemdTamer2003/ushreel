@@ -18,11 +18,12 @@ import ContentCreatorEditProfile from './Pages/Auth/ContentCreatorEditProfile';
 import CompanyProfile from './Pages/Auth/CompanyProfile';
 import MarketingSelectionPages from './Pages/Auth/MarketingSelectionPages';
 import FormDescription from './Pages/Auth/FormDescription';
-
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
     <>
+      <ToastContainer position="top-right" autoClose={4000} />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/login' element={<Login />} />

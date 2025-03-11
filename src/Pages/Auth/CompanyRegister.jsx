@@ -1,58 +1,119 @@
-import React, { useState } from 'react'
-import { Button, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import React, { useState } from 'react';
+import { Button } from "@mui/material";
 import companyregisterimg from "../../assets/AuthAssets/companyregister.png";
 import AuthInput from "./Auth-Components/AuthInput";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function CompanyRegister() {
     const [formData, setFormData] = useState({
-        comapnyname: "",
-        lastName: "",
+        companyName: "",
         email: "",
         password: "",
         confirmPassword: "",
-        phoneNumber: "",
+        phone: "",
         address: "",
     });
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (formData.password !== formData.confirmPassword) {
+            toast.error("Passwords do not match!");
+            return;
+        }
+
+        try {
+            await axios.post(`${import.meta.env.VITE_BASEURL}/auth/register/company`, {
+                name: formData.companyName,
+                email: formData.email,
+                password: formData.password,
+                phone: formData.phone,
+                address: formData.address,
+            });
+
+            toast.success("Registration successful! Please log in.");
+            navigate('/login');
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Registration failed");
+        }
+    };
+
     return (
         <div>
             <div className="bg-solid">
-                <div className="grid lg:grid-cols-2 grid-cols-1  rounded-lg shadow-lg  ">
+                <div className="grid lg:grid-cols-2 grid-cols-1 rounded-lg shadow-lg">
                     {/* Left Side Image */}
                     <div className="lg:flex hidden">
-                        <img src={companyregisterimg} className="w-full max-h-screen object-cover" alt="Usher Register" />
+                        <img src={companyregisterimg} className="w-full max-h-screen object-cover" alt="Company Register" />
                     </div>
 
                     {/* Right Side Form */}
-                    <div className="bg-solid lg:px-24 px-6 py-8 text-white w-full ">
+                    <div className="bg-solid lg:px-24 px-6 py-8 text-white w-full">
                         <h2 className="text-xl font-bold text-yellow-500 mb-2">Register Now</h2>
                         <p className="text-sm text-gray-400 mb-6">And make events more easier</p>
 
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                            <AuthInput
+                                LabelText="Company Name"
+                                name="companyName"
+                                value={formData.companyName}
+                                onChange={handleChange}
+                            />
 
-                        <AuthInput LabelText="Company Name" name="comapnyname" value={formData.comapnyname} onChange={handleChange} />
+                            <AuthInput
+                                LabelText="Email"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                            />
 
+                            <AuthInput
+                                LabelText="Password"
+                                name="password"
+                                type="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                            />
 
-                        <div className="flex flex-col gap-2 justify-center items-center">
-                            <AuthInput LabelText="Email" name="email" type="email" value={formData.email} onChange={handleChange} sx={{ marginTop: ".5rem", }} />
-                            <AuthInput LabelText="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
-                            <AuthInput LabelText="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
-                        </div>
-                        <AuthInput LabelText="Address" name="address" value={formData.address} onChange={handleChange} sx={{ marginTop: ".5rem" }} />
+                            <AuthInput
+                                LabelText="Confirm Password"
+                                name="confirmPassword"
+                                type="password"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                            />
 
+                            <AuthInput
+                                LabelText="Address"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                            />
 
-                        <AuthInput LabelText="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} sx={{ marginTop: ".5rem" }} />
+                            <AuthInput
+                                LabelText="Phone Number"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                            />
 
-                        {/* Register Button */}
-                        <div className="w-full flex justify-center items-center">
-                            <Button variant="contained" sx={{ backgroundColor: "#D4A537", mt: 2, width: '50%' }}>
-                                Create Account
-                            </Button>
-                        </div>
+                            <div className="w-full flex justify-center items-center">
+                                <Button type="submit" variant="contained" sx={{ backgroundColor: "#D4A537", mt: 2, width: '50%' }}>
+                                    Create Account
+                                </Button>
+                            </div>
+                        </form>
 
-                        {/* Login Link */}
                         <p className="text-center text-gray-400 mt-3">
                             Already have an account? <Link to={'/login'} className="text-yellow-500 cursor-pointer">Login</Link>
                         </p>
@@ -60,7 +121,7 @@ function CompanyRegister() {
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default CompanyRegister
+export default CompanyRegister;
