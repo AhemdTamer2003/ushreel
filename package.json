@@ -19,6 +19,8 @@
     "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/vite": "^4.0.6",
     "axios": "^1.8.2",
+    "cores": "^0.8.5",
+    "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "framer-motion": "^12.4.3",
     "react": "^19.0.0",
