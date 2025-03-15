@@ -1,5 +1,14 @@
-import { Button, FormControl, InputLabel, MenuItem, Select, CircularProgress } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { 
+  Button, 
+  FormControl, 
+  InputLabel, 
+  MenuItem, 
+  Select, 
+  CircularProgress, 
+  Autocomplete, 
+  TextField 
+} from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import usherregisterimg from "../../assets/AuthAssets/usherpic.png";
 import AuthInput from "./Auth-Components/AuthInput";
@@ -13,6 +22,8 @@ function UsherRegister() {
   const { loading } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -23,8 +34,32 @@ function UsherRegister() {
     role: "usher",
   });
 
+  const [usernameOptions, setUsernameOptions] = useState([]);
+
+  // Generate username suggestions based on first and last name
+  const generateUsernameSuggestions = () => {
+    const { firstName, lastName } = formData;
+    if (!firstName || !lastName) return [];
+
+    return [
+      `${firstName.toLowerCase()}${lastName.toLowerCase()}`,
+      `${firstName.toLowerCase()}_${lastName.toLowerCase()}`,
+      `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}`
+    ];
+  };
+
+  // Update username suggestions when first or last name changes
+  useEffect(() => {
+    const suggestions = generateUsernameSuggestions();
+    setUsernameOptions(suggestions);
+  }, [formData.firstName, formData.lastName]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleUsernameChange = (e, newValue) => {
+    setFormData({ ...formData, userName: newValue || "" });
   };
 
   const handleSubmit = async (e) => {
@@ -57,25 +92,55 @@ function UsherRegister() {
         </div>
 
         {/* Right side form */}
-        {/* Using space-y-4 to add spacing between children, plus some overall padding */}
         <form
           onSubmit={handleSubmit}
-          className="bg-solid lg:px-24 px-6 py-8 text-white w-full space-y-4"
+          className="bg-solid lg:px-24 px-8 py-10 text-white w-full space-y-6"
         >
           <div>
-            <h2 className="text-xl font-bold text-yellow-500">Register Now</h2>
+            <h2 className="text-2xl font-bold text-yellow-500">Register Now</h2>
             <p className="text-sm text-gray-400">And make events more easier</p>
           </div>
 
+          {/* First Name */}
           <div>
             <AuthInput
-              LabelText="User Name"
-              name="userName"
-              value={formData.userName}
+              LabelText="First Name"
+              name="firstName"
+              value={formData.firstName}
               onChange={handleChange}
             />
           </div>
 
+          {/* Last Name */}
+          <div>
+            <AuthInput
+              LabelText="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+          </div>
+
+          {/* Username with Autocomplete */}
+          <FormControl fullWidth sx={{ marginBottom: "1rem" }}>
+            <Autocomplete
+              freeSolo
+              options={usernameOptions}
+              value={formData.userName}
+              onChange={handleUsernameChange}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Username" 
+                  variant="outlined"
+                  fullWidth
+                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
+                />
+              )}
+            />
+          </FormControl>
+
+          {/* Email */}
           <div>
             <AuthInput
               LabelText="Email"
@@ -86,6 +151,7 @@ function UsherRegister() {
             />
           </div>
 
+          {/* Password */}
           <div>
             <AuthInput
               LabelText="Password"
@@ -96,6 +162,7 @@ function UsherRegister() {
             />
           </div>
 
+          {/* Confirm Password */}
           <div>
             <AuthInput
               LabelText="Confirm Password"
@@ -106,6 +173,7 @@ function UsherRegister() {
             />
           </div>
 
+          {/* Phone Number */}
           <div>
             <AuthInput
               LabelText="Phone Number"
@@ -115,13 +183,13 @@ function UsherRegister() {
             />
           </div>
 
-          {/* MUI FormControl for Gender with margin-bottom */}
+          {/* Gender Select */}
           <FormControl
             fullWidth
             sx={{
               backgroundColor: "white",
-              borderRadius: "2px",
-              marginBottom: "1rem", // increase spacing here
+              borderRadius: "4px",
+              marginBottom: "1rem",
             }}
           >
             <InputLabel>Gender</InputLabel>
@@ -131,7 +199,7 @@ function UsherRegister() {
             </Select>
           </FormControl>
 
-          {/* Date input with consistent padding/margins */}
+          {/* Birthdate */}
           <div>
             <input
               type="date"
@@ -142,17 +210,19 @@ function UsherRegister() {
             />
           </div>
 
-          <div className="w-full flex justify-center items-center mt-4">
+          {/* Submit Button */}
+          <div className="w-full flex justify-center items-center mt-6">
             <Button
               type="submit"
               variant="contained"
-              sx={{ backgroundColor: "#D4A537", width: "50%" }}
+              sx={{ backgroundColor: "#D4A537", width: "50%", padding: "10px 0" }}
               disabled={loading}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
             </Button>
           </div>
 
+          {/* Login Link */}
           <p className="text-center text-gray-400">
             Already have an account?{" "}
             <Link to="/login" className="text-yellow-500 cursor-pointer">
