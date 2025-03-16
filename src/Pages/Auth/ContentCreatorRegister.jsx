@@ -8,7 +8,8 @@ import { toast } from 'react-toastify';
 
 function ContentCreatorRegister() {
     const [formData, setFormData] = useState({
-        userName: "",
+        firstName: "",
+        lastName: "",
         email: "",
         password: "",
         confirmPassword: "",
@@ -36,7 +37,8 @@ function ContentCreatorRegister() {
             await axios.post(`${import.meta.env.VITE_BASEURL}/auth/register/content-creator`, {
                 email: formData.email,
                 password: formData.password,
-                userName: formData.userName,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
                 phone: formData.phone,
                 gender: formData.gender,
                 birthdate: formData.birthdate,
@@ -64,12 +66,24 @@ function ContentCreatorRegister() {
                     <p className="text-sm text-gray-400 mb-6">And make events more easier</p>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                        <AuthInput
-                            LabelText="Username"
-                            name="userName"
-                            value={formData.userName}
-                            onChange={handleChange}
-                        />
+                        <div className="flex space-x-4">
+                            <div className="flex-1">
+                                <AuthInput
+                                    LabelText="First Name"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <AuthInput
+                                    LabelText="Last Name"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
 
                         <AuthInput
                             LabelText="Email"

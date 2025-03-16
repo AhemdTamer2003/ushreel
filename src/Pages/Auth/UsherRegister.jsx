@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Button, 
   FormControl, 
@@ -6,7 +6,6 @@ import {
   MenuItem, 
   Select, 
   CircularProgress, 
-  Autocomplete, 
   TextField 
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,39 +26,14 @@ function UsherRegister() {
     email: "",
     password: "",
     confirmPassword: "",
-    userName: "",
     gender: "",
     phone: "",
     birthdate: "",
     role: "usher",
   });
 
-  const [usernameOptions, setUsernameOptions] = useState([]);
-
-  // Generate username suggestions based on first and last name
-  const generateUsernameSuggestions = () => {
-    const { firstName, lastName } = formData;
-    if (!firstName || !lastName) return [];
-
-    return [
-      `${firstName.toLowerCase()}${lastName.toLowerCase()}`,
-      `${firstName.toLowerCase()}_${lastName.toLowerCase()}`,
-      `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}`
-    ];
-  };
-
-  // Update username suggestions when first or last name changes
-  useEffect(() => {
-    const suggestions = generateUsernameSuggestions();
-    setUsernameOptions(suggestions);
-  }, [formData.firstName, formData.lastName]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleUsernameChange = (e, newValue) => {
-    setFormData({ ...formData, userName: newValue || "" });
   };
 
   const handleSubmit = async (e) => {
@@ -94,51 +68,32 @@ function UsherRegister() {
         {/* Right side form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-solid lg:px-24 px-8 py-10 text-white w-full space-y-6"
+          className="bg-solid lg:px-24 px-8 py-12 text-white w-full space-y-6"
         >
           <div>
             <h2 className="text-2xl font-bold text-yellow-500">Register Now</h2>
             <p className="text-sm text-gray-400">And make events more easier</p>
           </div>
 
-          {/* First Name */}
-          <div>
-            <AuthInput
-              LabelText="First Name"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-            />
+          {/* First Name and Last Name */}
+          <div className="flex space-x-4">
+            <div className="flex-1">
+              <AuthInput
+                LabelText="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="flex-1">
+              <AuthInput
+                LabelText="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-
-          {/* Last Name */}
-          <div>
-            <AuthInput
-              LabelText="Last Name"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Username with Autocomplete */}
-          <FormControl fullWidth sx={{ marginBottom: "1rem" }}>
-            <Autocomplete
-              freeSolo
-              options={usernameOptions}
-              value={formData.userName}
-              onChange={handleUsernameChange}
-              renderInput={(params) => (
-                <TextField 
-                  {...params} 
-                  label="Username" 
-                  variant="outlined"
-                  fullWidth
-                  sx={{ backgroundColor: "white", borderRadius: "4px" }}
-                />
-              )}
-            />
-          </FormControl>
 
           {/* Email */}
           <div>
@@ -173,16 +128,6 @@ function UsherRegister() {
             />
           </div>
 
-          {/* Phone Number */}
-          <div>
-            <AuthInput
-              LabelText="Phone Number"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-
           {/* Gender Select */}
           <FormControl
             fullWidth
@@ -199,14 +144,29 @@ function UsherRegister() {
             </Select>
           </FormControl>
 
+          {/* Phone Number */}
+          <div>
+            <AuthInput
+              LabelText="Phone Number"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+          </div>
+
           {/* Birthdate */}
           <div>
-            <input
+            <TextField
+              label="Usher BirthDate"
               type="date"
               name="birthdate"
               value={formData.birthdate}
               onChange={handleChange}
-              className="py-3 px-4 w-full text-black bg-white rounded-sm"
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{ backgroundColor: "white", borderRadius: "4px" }}
             />
           </div>
 
