@@ -9,6 +9,7 @@ import {
   TextField 
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";  // Import useNavigate
 import usherregisterimg from "../../assets/AuthAssets/usherpic.png";
 import AuthInput from "./Auth-Components/AuthInput";
 import { Link } from "react-router-dom";
@@ -18,6 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function UsherRegister() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
@@ -39,6 +41,8 @@ function UsherRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { confirmPassword, ...dataToSend } = formData;
+const email = formData.email;
+
 
     if (formData.password !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -48,6 +52,8 @@ function UsherRegister() {
     try {
       await dispatch(registerUshear(dataToSend)).unwrap();
       toast.success("Usher registered successfully!");
+      navigate("/verify-email", { state: { email } });
+
     } catch (err) {
       toast.error(err || "Registration failed");
     }

@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import AuthInput from './Auth-Components/AuthInput';
-import { Button } from '@mui/material';
-import loginpic from '../../assets/AuthAssets/loginbackground.png';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState } from "react";
+import AuthInput from "./Auth-Components/AuthInput";
+import { Button } from "@mui/material";
+import loginpic from "../../assets/AuthAssets/loginbackground.png";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Login() {
   const [formData, setFormData] = useState({
-    email: "",
+    emailOrPhoneOrUsername: "", // Changed from 'email'
     password: "",
-  });
+  });  
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,31 +21,45 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BASEURL}/auth/login`, formData);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASEURL}/auth/login`,
+        formData
+      );
+  
       const { token, role } = response.data;
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       toast.success("Login successful!");
-      if (role == "usher") {
-        navigate('/usher-profile')
-      }
-      else if (role == "company") {
-        navigate('/company-profile')
-      }
-      else if (role == "contentCreator") {
-        navigate('/content-creator-profile');
+  
+      if (role === "usher") {
+        navigate("/usher-profile");
+      } else if (role === "company") {
+        navigate("/company-profile");
+      } else if (role === "contentCreator") {
+        navigate("/content-creator-profile");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      const status = error.response?.status;
+      const errorMessage = error.response?.data?.message;
+      const redirectPath = error.response?.data?.redirect;
+  
+      if (status === 403 && errorMessage === "Email verification required") {
+        toast.warning("Please verify your email before logging in.");
+        navigate(redirectPath || "/verify-email"); 
+        return;
+      }
+  
+      toast.error(errorMessage || "Login failed");
     }
   };
+  
 
   return (
     <div
       className="flex justify-center items-center h-screen px-4"
       style={{
         backgroundImage: `url(${loginpic})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       <div className="bg-black-transport lg:w-1/3 w-full rounded-xl p-6 mt-6 gap-4">
@@ -55,13 +69,14 @@ function Login() {
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <AuthInput
-            LabelText="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            sx={{ marginTop: ".5rem" }}
-          />
+           LabelText="Email / Phone / Username"
+          name="emailOrPhoneOrUsername" // Changed name
+          type="text" // Changed from 'email' to 'text'
+          value={formData.emailOrPhoneOrUsername}
+          onChange={handleChange}
+          sx={{ marginTop: ".5rem" }}
+        />
+
           <AuthInput
             LabelText="Password"
             name="password"

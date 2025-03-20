@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Button, TextField } from '@mui/material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
-function VerifyOtp() {
+function VerifyEmail() {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get the email from location state. Adjust as needed if you store it elsewhere.
+
+  // Get the email from location state (passed from a previous page, e.g., forgot password)
   const email = location.state?.email || '';
 
   const handleChange = (e) => {
@@ -23,11 +23,11 @@ function VerifyOtp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
-        // On success, navigate to the activation page (/add-experience)
+        // On success, navigate to the next page (e.g., add-experience)
         navigate('/add-experience');
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');
@@ -56,10 +56,10 @@ function VerifyOtp() {
             color="primary"
             sx={{
               marginBottom: '1rem',
-              backgroundColor: '#2A2A2A', // Dark background for the OTP input field
+              backgroundColor: '#2A2A2A', // Dark background for the input field
               '& .MuiOutlinedInput-root': {
                 '& fieldset': {
-                  borderColor: '#D4A537', // Border color
+                  borderColor: '#D4A537', // Default border color
                 },
                 '&:hover fieldset': {
                   borderColor: '#FF9900', // Border color on hover
@@ -78,7 +78,7 @@ function VerifyOtp() {
             <Button
               type="submit"
               variant="contained"
-              sx={{ backgroundColor: "#C2A04C", width: '50%' }}
+              sx={{ backgroundColor: '#C2A04C', width: '50%' }}
             >
               Verify OTP
             </Button>
@@ -95,4 +95,4 @@ function VerifyOtp() {
   );
 }
 
-export default VerifyOtp;
+export default VerifyEmail;
