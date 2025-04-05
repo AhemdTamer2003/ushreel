@@ -1,69 +1,205 @@
-import React, { useState } from 'react';
-import { FaClipboardList } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+// src/components/AddExperience.jsx
+
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, CircularProgress, Paper, Box } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+import { addExperience, selectAuth } from '../../redux/Slices/authSlice';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { WorkHistory } from '@mui/icons-material';
 
 function AddExperience() {
-  const [newExperience, setNewExperience] = useState({ description: '' });
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { loading, error } = useSelector(selectAuth);
+  const [formData, setFormData] = useState({
+    description: '',
+  });
+  const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setNewExperience({ ...newExperience, [name]: value });
+  // Check authentication
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token) {
+      toast.error('Please log in to continue');
+      navigate('/login');
+      return;
+    }
+
+    // If user has already added experience, redirect to profile
+    if (user.hasAddedExperience) {
+      toast.info('Experience already added');
+      navigate('/usher-profile');
+    }
+  }, [navigate]);
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.description.trim()) {
+      newErrors.description = 'Experience description is required';
+    } else if (formData.description.length < 50) {
+      newErrors.description = 'Description must be at least 50 characters';
+    } else if (formData.description.length > 1000) {
+      newErrors.description = 'Description must not exceed 1000 characters';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (newExperience.description.trim()) {
-      // Add API call to save experience here (e.g., send to server)
-      navigate('/usher-profile'); // Navigate to UsherProfile
-    } else {
-      alert('Please enter an experience');
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      toast.error('Please fill all required fields correctly');
+      return;
+    }
+
+    try {
+      const result = await dispatch(addExperience({
+        description: formData.description.trim()
+      })).unwrap();
+
+      console.log('Add Experience Result:', result);
+
+      // Update user data in localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      user.hasAddedExperience = true;
+      localStorage.setItem('user', JSON.stringify(user));
+
+      toast.success('Experience added successfully!');
+      navigate('/usher-profile');
+
+    } catch (error) {
+      console.error('Error adding experience:', error);
+      
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/login');
+        toast.error('Session expired. Please log in again.');
+      } else {
+        toast.error(error.message || 'Failed to add experience');
+      }
+    }
+  };
+
+  // Styles
+  const inputStyle = {
+    '& .MuiOutlinedInput-root': {
+      color: 'black',
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      '& fieldset': {
+        borderColor: '#D4A537',
+      },
+      '&:hover fieldset': {
+        borderColor: '#D4A537',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#D4A537',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: '#666',
+      '&.Mui-focused': {
+        color: '#D4A537',
+      },
+    },
+    marginBottom: '20px',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C] flex justify-center items-center p-6">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="bg-[#C2A04C] rounded-xl p-12 shadow-2xl hover:shadow-3xl transform transition-all duration-300 w-full max-w-4xl"
-      >
-        <h2 className="text-4xl font-bold mb-6 text-black drop-shadow-lg">Add Experience</h2>
+    <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C] py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        <Paper className="bg-white rounded-xl p-8 shadow-2xl">
+          <Box className="flex items-center mb-8">
+            <WorkHistory sx={{ color: '#D4A537', fontSize: 40 }} />
+            <div className="ml-4">
+              <h2 className="text-3xl font-bold text-gray-800">Add Experience</h2>
+              <p className="text-gray-600">Share your ushering experience to enhance your profile</p>
+            </div>
+          </Box>
 
-        <p className="text-base mb-6 text-black drop-shadow-sm font-bold">
-          Please provide a detailed description of your experience. Remember to keep it professional and concise. You may include your job title, responsibilities, and achievements.
-        </p>
-
-        <div className="mb-6">
-          <label className="block mb-2 text-xl font-semibold text-black">Experience Description</label>
-          <div className="flex items-start bg-gray-100 rounded-lg p-4 shadow-inner">
-            <FaClipboardList className="mr-4 mt-1 text-[#C2A04C]" size={24} />
-            <textarea
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <TextField
+              label="Experience Description"
               name="description"
-              value={newExperience.description}
+              value={formData.description}
               onChange={handleChange}
-              className="bg-transparent w-full outline-none resize-none h-40 text-lg text-black transition-colors duration-300 focus:ring-2 focus:ring-[#C2A04C]"
-              placeholder="Write about your experience..."
+              error={!!errors.description}
+              helperText={errors.description || 'Minimum 50 characters required'}
+              fullWidth
+              required
+              multiline
+              rows={6}
+              sx={inputStyle}
+              placeholder="Describe your experience, skills, and achievements..."
             />
-          </div>
-          <p className="text-xs mt-2 text-black font-bold">
-            * Tips: It’s preferred to add your experience in this way:
-            <br />1: State your job title and role.
-            <br />2: Highlight your key achievements and responsibilities.
-            <br />This will make it easier for companies to understand your background.
-          </p>
-        </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05, boxShadow: '0px 8px 15px rgba(0, 0, 0, 0.3)' }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleSubmit}
-          className="bg-black text-[#C2A04C] px-8 py-4 rounded-full w-full transition-colors duration-300 flex justify-center items-center text-xl shadow-md"
-        >
-          Submit
-        </motion.button>
-      </motion.div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-gray-700 font-semibold mb-2">Tips for a great experience description:</h3>
+              <ul className="text-gray-600 text-sm space-y-1">
+                <li>• Start with your role and responsibilities</li>
+                <li>• Include specific achievements and metrics</li>
+                <li>• Mention relevant skills and tools used</li>
+                <li>• Keep it professional and concise</li>
+                <li>• Highlight any special events or venues you've worked at</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end space-x-4">
+              <Button
+                onClick={() => navigate(-1)}
+                variant="outlined"
+                sx={{
+                  borderColor: '#D4A537',
+                  color: '#D4A537',
+                  '&:hover': {
+                    borderColor: '#b88c2e',
+                    backgroundColor: 'rgba(212, 165, 55, 0.1)',
+                  },
+                }}
+              >
+                Back
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  backgroundColor: '#D4A537',
+                  '&:hover': {
+                    backgroundColor: '#b88c2e',
+                  },
+                  '&:disabled': {
+                    backgroundColor: '#7c6320',
+                  },
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Save Experience'
+                )}
+              </Button>
+            </div>
+          </form>
+        </Paper>
+      </div>
     </div>
   );
 }

@@ -1,173 +1,191 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  Box,
-  IconButton
+  TextField,
+  IconButton,
+  CircularProgress
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 
-const StyledDialog = styled(Dialog)(({ theme }) => ({
-  '& .MuiDialog-paper': {
-    backgroundColor: '#151515',
-    border: '1px solid rgba(194, 160, 76, 0.2)',
-    borderRadius: '16px',
-    color: '#fff',
-  },
-  '& .MuiDialogTitle-root': {
-    backgroundColor: '#151515',
-    color: '#C2A04C',
-  },
-  '& .MuiDialogContent-root': {
-    padding: theme.spacing(3),
-  },
-  '& .MuiTextField-root': {
-    marginBottom: theme.spacing(2),
-    '& .MuiOutlinedInput-root': {
-      color: '#fff',
-      '& fieldset': {
-        borderColor: 'rgba(194, 160, 76, 0.2)',
-      },
-      '&:hover fieldset': {
-        borderColor: '#C2A04C',
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: '#C2A04C',
-      },
-    },
-    '& .MuiInputLabel-root': {
-      color: '#C2A04C',
-    },
-  },
-}));
+function ExperienceEditDialog({ open, handleClose, experiences, onSave, loading }) {
+  const [editedExperiences, setEditedExperiences] = useState([]);
+  const [errors, setErrors] = useState([]);
 
-const StyledButton = styled(Button)(({ theme }) => ({
-  backgroundColor: '#C2A04C',
-  color: '#151515',
-  '&:hover': {
-    backgroundColor: 'rgba(194, 160, 76, 0.8)',
-  },
-}));
-
-function ExperienceEditDialog({ open, handleClose, experiences, onSave }) {
-  const [experiencesList, setExperiencesList] = useState(experiences);
-  const [newExperience, setNewExperience] = useState({
-    description: '',
-    date: ''
-  });
+  useEffect(() => {
+    setEditedExperiences(experiences);
+    setErrors(new Array(experiences.length).fill(''));
+  }, [experiences]);
 
   const handleAddExperience = () => {
-    if (newExperience.description && newExperience.date) {
-      const newId = experiencesList.length > 0 
-        ? Math.max(...experiencesList.map(exp => exp.id)) + 1 
-        : 1;
-      
-      setExperiencesList([
-        ...experiencesList,
-        {
-          id: newId,
-          description: newExperience.description,
-          date: newExperience.date
-        }
-      ]);
-      setNewExperience({ description: '', date: '' });
+    setEditedExperiences([
+      ...editedExperiences,
+      {
+        id: editedExperiences.length + 1,
+        description: '',
+        date: `(${new Date().getFullYear()})`
+      }
+    ]);
+    setErrors([...errors, '']);
+  };
+
+  const handleRemoveExperience = (index) => {
+    const newExperiences = editedExperiences.filter((_, i) => i !== index);
+    const newErrors = errors.filter((_, i) => i !== index);
+    setEditedExperiences(newExperiences);
+    setErrors(newErrors);
+  };
+
+  const handleExperienceChange = (index, value) => {
+    const newExperiences = [...editedExperiences];
+    newExperiences[index] = {
+      ...newExperiences[index],
+      description: value
+    };
+    setEditedExperiences(newExperiences);
+
+    // Clear error when user starts typing
+    if (value.trim() !== '') {
+      const newErrors = [...errors];
+      newErrors[index] = '';
+      setErrors(newErrors);
     }
   };
 
-  const handleDeleteExperience = (id) => {
-    setExperiencesList(experiencesList.filter(exp => exp.id !== id));
+  const validateExperiences = () => {
+    const newErrors = editedExperiences.map(exp => 
+      exp.description.trim() === '' ? 'Experience description is required' : ''
+    );
+    setErrors(newErrors);
+    return newErrors.every(error => error === '');
   };
 
-  const handleExperienceChange = (id, field, value) => {
-    setExperiencesList(experiencesList.map(exp =>
-      exp.id === id ? { ...exp, [field]: value } : exp
-    ));
-  };
+  const handleSave = async () => {
+    if (!validateExperiences()) {
+      toast.error('Please fill in all experience descriptions');
+      return;
+    }
 
-  const handleSave = () => {
-    onSave(experiencesList);
-    handleClose();
+    try {
+      await onSave(editedExperiences);
+      handleClose();
+      toast.success('Experiences updated successfully!');
+    } catch (error) {
+      console.error('Error saving experiences:', error);
+      toast.error('Failed to save experiences');
+    }
   };
 
   return (
-    <StyledDialog
+    <Dialog
       open={open}
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      PaperProps={{
+        style: {
+          backgroundColor: '#1a1a1a',
+          color: '#ffffff'
+        }
+      }}
     >
-      <DialogTitle>Edit Experiences</DialogTitle>
+      <DialogTitle sx={{ color: '#C2A04C' }}>
+        Edit Experiences
+      </DialogTitle>
+      
       <DialogContent>
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            fullWidth
-            label="New Experience"
-            value={newExperience.description}
-            onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Date"
-            value={newExperience.date}
-            onChange={(e) => setNewExperience({ ...newExperience, date: e.target.value })}
-            placeholder="(2024 - 2025)"
-            margin="normal"
-          />
-          <StyledButton
-            onClick={handleAddExperience}
-            startIcon={<AddIcon />}
-            fullWidth
-            sx={{ mt: 1 }}
-          >
-            Add Experience
-          </StyledButton>
-        </Box>
-
-        <Box sx={{ mt: 3 }}>
-          {experiencesList.map((exp) => (
-            <Box key={exp.id} sx={{ mb: 2, display: 'flex', gap: 1 }}>
+        <div className="space-y-4 mt-4">
+          {editedExperiences.map((experience, index) => (
+            <div key={index} className="flex items-start space-x-2">
               <TextField
                 fullWidth
-                value={exp.description}
-                onChange={(e) => handleExperienceChange(exp.id, 'description', e.target.value)}
-              />
-              <TextField
-                sx={{ width: '30%' }}
-                value={exp.date}
-                onChange={(e) => handleExperienceChange(exp.id, 'date', e.target.value)}
+                multiline
+                rows={2}
+                value={experience.description}
+                onChange={(e) => handleExperienceChange(index, e.target.value)}
+                error={!!errors[index]}
+                helperText={errors[index]}
+                placeholder="Describe your experience..."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: '#C2A04C' },
+                    '&:hover fieldset': { borderColor: '#C2A04C' },
+                    '&.Mui-focused fieldset': { borderColor: '#C2A04C' },
+                  },
+                  '& .MuiFormHelperText-root': {
+                    color: '#f44336'
+                  }
+                }}
               />
               <IconButton
-                onClick={() => handleDeleteExperience(exp.id)}
-                sx={{ color: 'error.main' }}
+                onClick={() => handleRemoveExperience(index)}
+                sx={{ color: '#C2A04C' }}
               >
                 <DeleteIcon />
               </IconButton>
-            </Box>
+            </div>
           ))}
-        </Box>
+        </div>
+        
+        <Button
+          startIcon={<AddIcon />}
+          onClick={handleAddExperience}
+          sx={{
+            color: '#C2A04C',
+            borderColor: '#C2A04C',
+            marginTop: 2,
+            '&:hover': {
+              borderColor: '#C2A04C',
+              backgroundColor: 'rgba(194, 160, 76, 0.1)'
+            }
+          }}
+          variant="outlined"
+        >
+          Add Experience
+        </Button>
       </DialogContent>
 
       <DialogActions sx={{ padding: 2 }}>
         <Button
           onClick={handleClose}
-          sx={{ color: '#C2A04C' }}
+          sx={{
+            color: '#C2A04C',
+            '&:hover': {
+              backgroundColor: 'rgba(194, 160, 76, 0.1)'
+            }
+          }}
         >
           Cancel
         </Button>
-        <StyledButton
+        <Button
           onClick={handleSave}
+          disabled={loading}
           variant="contained"
+          sx={{
+            backgroundColor: '#C2A04C',
+            color: 'black',
+            '&:hover': {
+              backgroundColor: '#9c8031'
+            },
+            '&.Mui-disabled': {
+              backgroundColor: '#665420',
+              color: 'rgba(255, 255, 255, 0.3)'
+            }
+          }}
         >
-          Save Changes
-        </StyledButton>
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            'Save Changes'
+          )}
+        </Button>
       </DialogActions>
-    </StyledDialog>
+    </Dialog>
   );
 }
 

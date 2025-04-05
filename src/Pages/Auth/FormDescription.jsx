@@ -63,8 +63,8 @@ function FormDescription() {
   };
 
   const handleNext = () => {
-    // Add validation and API call here
-    console.log('Form Data:', formData);
+    // Add validation here if needed
+    navigate('/recommendations', { state: { formData } });
   };
 
   return (
