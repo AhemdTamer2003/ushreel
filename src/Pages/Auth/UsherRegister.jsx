@@ -95,7 +95,7 @@ function UsherRegister() {
       await dispatch(registerUshear(dataToSend)).unwrap();
       localStorage.setItem('registrationEmail', formData.email);
       toast.success("Registration successful! Please verify your email.");
-      navigate("/verify-otp", { state: { email: formData.email } });
+      navigate("/verify-email", { state: { email: formData.email } });
     } catch (err) {
       toast.error(err || "Registration failed");
     }

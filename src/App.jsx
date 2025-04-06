@@ -26,6 +26,7 @@ import CompanyProfile from './Pages/Auth/CompanyProfile';
 import MarketingSelectionPages from './Pages/Auth/MarketingSelectionPages';
 import FormDescription from './Pages/Auth/FormDescription';
 import Recommendations from './Pages/Auth/Recommendations';
+import ResetOtp from './Pages/Auth/ResetOtp';
 
 // Create theme
 const theme = createTheme({
@@ -185,7 +186,8 @@ function App() {
 
           {/* Password Reset Flow */}
           <Route path='/forgot-password' element={<ForgetPassword />} />
-          <Route path='/verify-otp' element={<VerifyOtp />} />
+          <Route path='/verify-email' element={<VerifyOtp />} />
+          <Route path='/verify-otp' element={<ResetOtp />} />
           <Route path='/ResetPassword' element={<ResetPassword />} />
 
           {/* Profile & Experience Routes */}

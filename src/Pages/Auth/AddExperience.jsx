@@ -17,10 +17,16 @@ function AddExperience() {
   });
   const [errors, setErrors] = useState({});
 
-  // Check authentication
+  // Check authentication and if the user has added experience
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('user') || '{}');
+      } catch (e) {
+        return {}; // Return an empty object if parsing fails
+      }
+    })();
 
     if (!token) {
       toast.error('Please log in to continue');
@@ -29,11 +35,11 @@ function AddExperience() {
     }
 
     // If user has already added experience, redirect to profile
-    if (user.hasAddedExperience) {
+    if (user?.hasAddedExperience) {
       toast.info('Experience already added');
       navigate('/usher-profile');
     }
-  }, [navigate]);
+  }, []); // Remove `navigate` from dependencies
 
   // Validate form
   const validateForm = () => {
@@ -77,7 +83,14 @@ function AddExperience() {
       console.log('Add Experience Result:', result);
 
       // Update user data in localStorage
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = (() => {
+        try {
+          return JSON.parse(localStorage.getItem('user') || '{}');
+        } catch (e) {
+          return {};
+        }
+      })();
+
       user.hasAddedExperience = true;
       localStorage.setItem('user', JSON.stringify(user));
 

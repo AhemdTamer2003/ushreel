@@ -19,7 +19,7 @@ import { toast } from 'react-toastify';
 import { verifyEmail, selectAuth } from '../../redux/Slices/authSlice';
 import backgroundImg from '../../assets/AuthAssets/loginbackground.png';
 
-function VerifyOtp() {
+function ResetOtp() {
   const dispatch = useDispatch();
   const { loading } = useSelector(selectAuth);
   const navigate = useNavigate();
@@ -162,7 +162,7 @@ function VerifyOtp() {
               Verify Email
             </Typography>
             <Typography variant="body1" className="text-gray-300">
-              Enter the 6-digit code sent to<br />
+              Resetting code sent to<br />
               <span className="text-[#D4A537] font-medium">{email}</span>
             </Typography>
           </Box>
@@ -263,4 +263,4 @@ function VerifyOtp() {
   );
 }
 
-export default VerifyOtp;
+export default ResetOtp;
