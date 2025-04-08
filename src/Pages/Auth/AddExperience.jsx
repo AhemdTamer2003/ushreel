@@ -13,7 +13,7 @@ function AddExperience() {
   const navigate = useNavigate();
   const { loading, error } = useSelector(selectAuth);
   const [formData, setFormData] = useState({
-    description: '',
+    experience: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -76,30 +76,13 @@ function AddExperience() {
     }
 
     try {
-      const result = await dispatch(addExperience({
-        description: formData.description.trim()
-      })).unwrap();
-
-      console.log('Add Experience Result:', result);
-
-      // Update user data in localStorage
-      const user = (() => {
-        try {
-          return JSON.parse(localStorage.getItem('user') || '{}');
-        } catch (e) {
-          return {};
-        }
-      })();
-
-      user.hasAddedExperience = true;
-      localStorage.setItem('user', JSON.stringify(user));
-
+      const result = await dispatch(addExperience(
+        formData.experience
+      )).unwrap();
       toast.success('Experience added successfully!');
       navigate('/usher-profile');
-
     } catch (error) {
       console.error('Error adding experience:', error);
-      
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         navigate('/login');

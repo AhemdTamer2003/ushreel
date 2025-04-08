@@ -44,12 +44,12 @@ api.interceptors.response.use(
       data: error.response?.data,
       message: error.message
     });
-    
+
     if (error.response?.status === 401) {
       logout();
       window.location.href = '/login';
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -60,7 +60,7 @@ const registerUshear = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       console.log('Registration Request:', formData);
-      
+
       const response = await api.post("/auth/register/usher", {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -71,7 +71,7 @@ const registerUshear = createAsyncThunk(
         birthdate: formData.birthdate,
         role: formData.role
       });
-
+      localStorage.setItem("verificationEmail", formData.email);
       console.log('Registration Response:', response.data);
 
       if (!response.data) {
@@ -82,8 +82,8 @@ const registerUshear = createAsyncThunk(
     } catch (error) {
       console.error('Registration Error:', error);
       return rejectWithValue(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         "Registration failed"
       );
     }
@@ -95,7 +95,7 @@ const loginUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       console.log('Login Request:', formData);
-      
+
       const response = await api.post("/auth/login", {
         emailOrPhoneOrUsername: formData.emailOrPhoneOrUsername,
         password: formData.password
@@ -120,8 +120,8 @@ const loginUser = createAsyncThunk(
     } catch (error) {
       console.error('Login Error:', error);
       return rejectWithValue(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         "Login failed"
       );
     }
@@ -132,9 +132,9 @@ const verifyEmail = createAsyncThunk(
   'auth/verifyEmail',
   async ({ email, verificationCode }, { rejectWithValue }) => {
     try {
-      const response = await api.post("/auth/verify-email", { 
-        email, 
-        verificationCode 
+      const response = await api.post("/auth/verify-email", {
+        email,
+        verificationCode
       });
       return response.data;
     } catch (error) {
@@ -169,12 +169,17 @@ const resetPassword = createAsyncThunk(
 
 const addExperience = createAsyncThunk(
   'usher/addExperience',
-  async (experienceData, { rejectWithValue }) => {
+  async (experience, { rejectWithValue }) => {
     try {
-      const response = await api.post("/api/usher/complete-profile", {
-        experience: experienceData.description
+      const token = localStorage.getItem("token");
+      const response = await api.post(`${import.meta.env.VITE_BASEURL}/usher/complete-profile`, {
+        experience
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-      
+
       // Update user data in localStorage
       try {
         const user = getCurrentUser();
@@ -185,7 +190,7 @@ const addExperience = createAsyncThunk(
       } catch (error) {
         console.error('Error updating user experience status:', error);
       }
-      
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to add experience");

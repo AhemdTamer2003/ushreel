@@ -39,7 +39,7 @@ function CompanyRegister() {
                 phone: formData.phone,
                 address: formData.address,
             });
-
+            localStorage.setItem("verificationEmail", formData.email);
             toast.success("Registration successful! Please log in.");
             navigate('/login');
         } catch (error) {

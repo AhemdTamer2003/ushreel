@@ -44,9 +44,9 @@ function ContentCreatorRegister() {
                 birthdate: formData.birthdate,
                 fieldOfWork: formData.fieldOfWork,
             });
-
+            localStorage.setItem("verificationEmail", formData.email);
             toast.success("Registration successful! Please log in.");
-            navigate('/login');
+            navigate('/verify-email');
         } catch (error) {
             toast.error(error.response?.data?.message || "Registration failed");
         }

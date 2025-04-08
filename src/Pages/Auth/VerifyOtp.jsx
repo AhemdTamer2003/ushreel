@@ -33,11 +33,11 @@ function VerifyOtp() {
   const fromLogin = location.state?.fromLogin;
 
   useEffect(() => {
-    if (!email) {
-      toast.error('No email found. Please try again.');
-      navigate('/login');
-      return;
-    }
+    // if (!email) {
+    //   toast.error('No email found. Please try again.');
+    //   // navigate('/login');
+    //   return;
+    // }
 
     inputRefs.current = inputRefs.current.slice(0, 6);
     if (inputRefs.current[0]) inputRefs.current[0].focus();

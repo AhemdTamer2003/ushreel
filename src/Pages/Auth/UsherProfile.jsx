@@ -22,19 +22,14 @@ function UsherProfile() {
           return;
         }
 
-        const response = await axios.get(`${import.meta.env.VITE_BASEURL}/api/usher/profile`, {
+        const response = await axios.get(`${import.meta.env.VITE_BASEURL}/usher/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log(response.data);
 
-        if (!response.data.experience || response.data.experience.length === 0) {
-          toast.info('Please add your experience first');
-          navigate('/add-experience');
-          return;
-        }
-
-        setUsherData(response.data);
+        setUsherData(response.data.profile);
       } catch (error) {
         console.error('Error fetching user data:', error);
         if (error.response?.status === 401) {
@@ -167,9 +162,9 @@ function UsherProfile() {
           </Link>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-black">{usherData.name}</span>
+          <span className="text-black">{usherData.firstName}</span>
           <img
-            src={usherData.profileImage || 'default-profile-image.jpg'}
+            src={usherData.profileImage}
             alt="Profile"
             className="w-8 h-8 rounded-full"
           />
@@ -228,9 +223,8 @@ function UsherProfile() {
                     <p className="text-black font-semibold">{offer.company}</p>
                     {offer.status && (
                       <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          offer.status === 'accepted' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-full text-sm ${offer.status === 'accepted' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                          }`}
                       >
                         {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
                       </span>
@@ -270,11 +264,16 @@ function UsherProfile() {
               </button>
             </div>
             <div className="space-y-4">
-              {usherData.experience.map((exp, index) => (
-                <div key={index} className="text-gray-300">
-                  <p>{exp}</p>
-                </div>
-              ))}
+              {/* {usherData.experience?.length ? (
+                usherData.experience.map((exp, index) => (
+                  <div key={index} className="text-gray-300">
+                    <p>{exp}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-400">No experiences added yet</p>
+              )} */}
+
             </div>
           </div>
 
@@ -282,12 +281,17 @@ function UsherProfile() {
           <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
             <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Companies Opinions</h3>
             <div className="space-y-4">
-              {usherData.companyOpinions.map((opinion, index) => (
-                <div key={index} className="flex justify-between items-center text-gray-300">
-                  <span>{opinion.company}</span>
-                  <span>{opinion.rating}</span>
-                </div>
-              ))}
+              {/* {usherData.companyOpinions?.length === 0 ? (
+                <p className="text-gray-400">No opinions yet</p>
+              ) : (
+                usherData.companyOpinions.map((opinion, index) => (
+                  <div key={index} className="flex justify-between items-center text-gray-300">
+                    <span>{opinion.company}</span>
+                    <span>{opinion.rating}</span>
+                  </div>
+                ))
+              )} */}
+
             </div>
           </div>
         </div>
