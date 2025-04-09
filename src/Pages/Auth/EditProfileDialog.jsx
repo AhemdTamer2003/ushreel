@@ -1,4 +1,3 @@
-// EditProfileDialog.jsx
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -59,16 +58,13 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const EditProfileDialog = ({ open, handleClose, profileData, onSave }) => {
   const [formData, setFormData] = useState({
-    name: profileData?.name || '',
-    email: profileData?.email || '',
+    firstName: profileData?.firstName || '',
+    lastName: profileData?.lastName || '',
+    userName: profileData?.userName || '',
     phone: profileData?.phone || '',
-    location: profileData?.location || '',
-    gender: profileData?.gender || '',
-    age: profileData?.age || '',
+    address: profileData?.address || '',
     profileImage: profileData?.profileImage || '',
   });
-
-  const [newExperience, setNewExperience] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -91,14 +87,7 @@ const EditProfileDialog = ({ open, handleClose, profileData, onSave }) => {
     }
   };
 
-  const handleAddExperience = () => {
-    if (newExperience.trim()) {
-      // Add logic to handle new experience
-      setNewExperience('');
-    }
-  };
-
-  const handleSave = () => {
+  const handleSubmit = () => {
     onSave(formData);
     handleClose();
   };
@@ -141,20 +130,34 @@ const EditProfileDialog = ({ open, handleClose, profileData, onSave }) => {
 
         <TextField
           fullWidth
-          label="Name"
-          name="name"
-          value={formData.name}
+          label="First Name"
+          name="firstName"
+          value={formData.firstName}
           onChange={handleChange}
           variant="outlined"
+          margin="normal"
         />
+
         <TextField
           fullWidth
-          label="Email"
-          name="email"
-          value={formData.email}
+          label="Last Name"
+          name="lastName"
+          value={formData.lastName}
           onChange={handleChange}
           variant="outlined"
+          margin="normal"
         />
+
+        <TextField
+          fullWidth
+          label="Username"
+          name="userName"
+          value={formData.userName}
+          onChange={handleChange}
+          variant="outlined"
+          margin="normal"
+        />
+
         <TextField
           fullWidth
           label="Phone"
@@ -162,47 +165,18 @@ const EditProfileDialog = ({ open, handleClose, profileData, onSave }) => {
           value={formData.phone}
           onChange={handleChange}
           variant="outlined"
-        />
-        <TextField
-          fullWidth
-          label="Location"
-          name="location"
-          value={formData.location}
-          onChange={handleChange}
-          variant="outlined"
-        />
-        <TextField
-          fullWidth
-          label="Gender"
-          name="gender"
-          value={formData.gender}
-          onChange={handleChange}
-          variant="outlined"
-        />
-        <TextField
-          fullWidth
-          label="Age"
-          name="age"
-          value={formData.age}
-          onChange={handleChange}
-          variant="outlined"
+          margin="normal"
         />
 
-        <Box sx={{ mt: 3 }}>
-          <TextField
-            fullWidth
-            label="Add New Experience"
-            value={newExperience}
-            onChange={(e) => setNewExperience(e.target.value)}
-            variant="outlined"
-          />
-          <StyledButton
-            onClick={handleAddExperience}
-            sx={{ mt: 1 }}
-          >
-            Add Experience
-          </StyledButton>
-        </Box>
+        <TextField
+          fullWidth
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          variant="outlined"
+          margin="normal"
+        />
       </DialogContent>
 
       <DialogActions sx={{ padding: 2 }}>
@@ -213,7 +187,7 @@ const EditProfileDialog = ({ open, handleClose, profileData, onSave }) => {
           Cancel
         </Button>
         <StyledButton
-          onClick={handleSave}
+          onClick={handleSubmit}
           variant="contained"
         >
           Save Changes

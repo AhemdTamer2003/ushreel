@@ -4,140 +4,176 @@ import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSignOutAlt } from 'react
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button, CircularProgress } from '@mui/material';
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+
+const api = axios.create({
+  baseURL: 'http://localhost:3000',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 function UsherProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [usherData, setUsherData] = useState(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingExperience, setIsEditingExperience] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firstName: '',
+    lastName: '',
+    userName: '',
+    phone: '',
+    address: '',
+    experience: ''
+  });
 
-  // Fetch user profile data
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          toast.error('Please log in to view your profile');
-          navigate('/login');
-          return;
-        }
+    fetchUserProfile();
+  }, []);
 
-        const response = await axios.get(`${import.meta.env.VITE_BASEURL}/usher/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(response.data);
-
-        setUsherData(response.data.profile);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          toast.error('Session expired. Please log in again');
-          navigate('/login');
-        } else {
-          toast.error('Failed to load profile data');
-        }
-      } finally {
-        setLoading(false);
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please log in to view your profile');
+        navigate('/login');
+        return;
       }
-    };
 
-    fetchUserData();
-  }, [navigate]);
+      const response = await api.get('/usher/profile');
+      if (response.data) {
+        setUsherData(response.data);
+        setEditFormData({
+          firstName: response.data.firstName || '',
+          lastName: response.data.lastName || '',
+        
+          userName: response.data.userName || '',
+          phone: response.data.phone || '',
+          address: response.data.address || '',
+          experience: response.data.experience || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      handleApiError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Handle logout
+  const handleProfileUpdate = async () => {
+    try {
+      const response = await api.put('/usher/profile', {
+        firstName: editFormData.firstName,
+        lastName: editFormData.lastName,
+        userName: editFormData.userName,
+        phone: editFormData.phone,
+        address: editFormData.address,
+        experience: editFormData.experience
+      });
+
+      if (response.data) {
+        setUsherData(response.data);
+        setIsEditingProfile(false);
+        toast.success('Profile updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      handleApiError(error);
+    }
+  };
+
+  const handleExperienceUpdate = async () => {
+    try {
+      const response = await api.post('/api/usher/complete-profile', {
+        experience: editFormData.experience
+      });
+
+      if (response.data) {
+        setUsherData(prev => ({
+          ...prev,
+          experience: response.data.experience
+        }));
+        setIsEditingExperience(false);
+        toast.success('Experience updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating experience:', error);
+      handleApiError(error);
+    }
+  };
+
+  const handleProfilePictureUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('picture', file);
+
+    try {
+      const response = await api.post('/usher/profile/upload-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data) {
+        setUsherData(prev => ({
+          ...prev,
+          profileImage: response.data.profileImage
+        }));
+        toast.success('Profile picture updated successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      handleApiError(error);
+    }
+  };
+
+  const handleApiError = (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      toast.error('Session expired. Please log in again');
+      navigate('/login');
+    } else {
+      toast.error(error.response?.data?.message || 'An error occurred. Please try again.');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     toast.success('Logged out successfully');
     navigate('/login');
   };
 
-  // Handle accepting an offer
-  const handleAcceptOffer = async (offerId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${import.meta.env.VITE_BASEURL}/api/usher/offers/${offerId}/accept`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setUsherData((prev) => ({
-        ...prev,
-        offers: prev.offers.map((offer) =>
-          offer.id === offerId ? { ...offer, status: 'accepted' } : offer
-        ),
-      }));
-
-      toast.success('Offer accepted successfully!');
-    } catch (error) {
-      console.error('Error accepting offer:', error);
-      toast.error('Failed to accept offer');
-    }
-  };
-
-  // Handle declining an offer
-  const handleDeclineOffer = async (offerId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${import.meta.env.VITE_BASEURL}/api/usher/offers/${offerId}/decline`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setUsherData((prev) => ({
-        ...prev,
-        offers: prev.offers.map((offer) =>
-          offer.id === offerId ? { ...offer, status: 'declined' } : offer
-        ),
-      }));
-
-      toast.success('Offer declined successfully!');
-    } catch (error) {
-      console.error('Error declining offer:', error);
-      toast.error('Failed to decline offer');
-    }
-  };
-
-  // Render loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-[#C2A04C]">
         <CircularProgress sx={{ color: '#D4A537' }} />
-      </div>
-    );
-  }
-
-  // Render error state
-  if (!usherData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-[#C2A04C]">
-        <div className="text-white text-center">
-          <h2 className="text-2xl mb-4">Failed to load profile data</h2>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/login')}
-            sx={{
-              backgroundColor: '#D4A537',
-              '&:hover': {
-                backgroundColor: '#b88c2e',
-              },
-            }}
-          >
-            Return to Login
-          </Button>
-        </div>
       </div>
     );
   }
@@ -148,26 +184,20 @@ function UsherProfile() {
       <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
         <div className="text-black font-bold text-xl">UsheReel</div>
         <div className="flex space-x-4">
-          <Link to="/" className="text-black hover:text-white transition-colors">
-            Home
-          </Link>
-          <Link to="/explore" className="text-black hover:text-white transition-colors">
-            Explore
-          </Link>
-          <Link to="/about" className="text-black hover:text-white transition-colors">
-            About
-          </Link>
-          <Link to="/contact" className="text-black hover:text-white transition-colors">
-            Contact
-          </Link>
+          <Link to="/" className="text-black hover:text-white transition-colors">Home</Link>
+          <Link to="/explore" className="text-black hover:text-white transition-colors">Explore</Link>
+          <Link to="/about" className="text-black hover:text-white transition-colors">About</Link>
+          <Link to="/contact" className="text-black hover:text-white transition-colors">Contact</Link>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-black">{usherData.firstName}</span>
-          <img
-            src={usherData.profileImage}
-            alt="Profile"
-            className="w-8 h-8 rounded-full"
-          />
+          <span className="text-black font-medium">{usherData?.firstName || 'User'}</span>
+          <div className="relative">
+            <img
+              src={usherData?.profileImage || '/default-profile.jpg'}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover border-2 border-black"
+            />
+          </div>
           <button onClick={handleLogout} className="text-black hover:text-white transition-colors">
             <FaSignOutAlt size={20} />
           </button>
@@ -175,127 +205,174 @@ function UsherProfile() {
       </nav>
 
       {/* Main Content */}
-      <div className="container mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Profile Card */}
+      <div className="container mx-auto p-8">
         <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
-          <div className="flex flex-col items-center">
-            <img
-              src={usherData.profileImage || 'default-profile-image.jpg'}
-              alt="Profile"
-              className="w-32 h-32 rounded-full mb-4 border-4 border-[#C2A04C]"
-            />
-            <h2 className="text-[#C2A04C] text-2xl font-bold mb-2">{usherData.name}</h2>
-            <p className="text-gray-400 text-sm mb-4">#{usherData.id}</p>
-            <div className="w-full space-y-3">
-              <div className="flex items-center text-gray-300">
-                <FaEnvelope className="text-[#C2A04C] mr-2" />
-                <span>{usherData.email}</span>
-              </div>
-              <div className="flex items-center text-gray-300">
-                <FaPhone className="text-[#C2A04C] mr-2" />
-                <span>{usherData.phone}</span>
-              </div>
-              <div className="flex items-center text-gray-300">
-                <FaMapMarkerAlt className="text-[#C2A04C] mr-2" />
-                <span>{usherData.location}</span>
-              </div>
+          {/* Profile Header */}
+          <div className="flex items-center space-x-8 mb-8">
+            <div className="relative">
+              <img
+                src={usherData?.profileImage || '/default-profile.jpg'}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border-4 border-[#C2A04C]"
+              />
+              <label className="absolute bottom-2 right-2 cursor-pointer bg-[#C2A04C] rounded-full p-2">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfilePictureUpload}
+                />
+                <FaEdit className="text-black" />
+              </label>
             </div>
-            <button
-              onClick={() => navigate('/edit-profile')}
-              className="mt-6 bg-[#C2A04C] text-black px-6 py-2 rounded-full hover:bg-[#C2A04C]/80 transition-colors duration-300"
+            <div className="flex-1">
+              <h1 className="text-[#C2A04C] text-3xl font-bold">
+                {usherData?.firstName} {usherData?.lastName}
+              </h1>
+              <p className="text-gray-400">@{usherData?.userName}</p>
+            </div>
+            <Button
+              onClick={() => setIsEditingProfile(true)}
+              variant="contained"
+              sx={{
+                backgroundColor: '#C2A04C',
+                '&:hover': { backgroundColor: '#9c7c3c' }
+              }}
             >
               Edit Profile
-            </button>
+            </Button>
           </div>
-        </div>
 
-        {/* Offers Section */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Offers</h3>
+          {/* Profile Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              {usherData.offers.map((offer) => (
-                <div
-                  key={offer.id}
-                  className="bg-[#C2A04C] p-4 rounded-lg transform transition-all duration-300 hover:scale-[1.02]"
+              <div className="flex items-center space-x-3">
+                <FaPhone className="text-[#C2A04C]" />
+                <span className="text-white">{usherData?.phone || 'No phone number'}</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <FaMapMarkerAlt className="text-[#C2A04C]" />
+                <span className="text-white">{usherData?.address || 'No address'}</span>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-[#C2A04C] text-xl font-bold flex items-center justify-between">
+                Experience
+                <button
+                  onClick={() => setIsEditingExperience(true)}
+                  className="text-sm hover:text-[#9c7c3c]"
                 >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-black font-semibold">{offer.company}</p>
-                    {offer.status && (
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${offer.status === 'accepted' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                          }`}
-                      >
-                        {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-black mb-3">{offer.message}</p>
-                  {!offer.status && (
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        onClick={() => handleDeclineOffer(offer.id)}
-                        className="bg-black text-red-500 px-4 py-2 rounded-full hover:bg-black/80 transition-all duration-300 transform hover:scale-105"
-                      >
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => handleAcceptOffer(offer.id)}
-                        className="bg-black text-green-500 px-4 py-2 rounded-full hover:bg-black/80 transition-all duration-300 transform hover:scale-105"
-                      >
-                        Accept
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Experiences Section */}
-          <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-[#C2A04C] text-xl font-bold">Experiences</h3>
-              <button
-                onClick={() => navigate('/edit-experience')}
-                className="text-[#C2A04C] hover:text-[#C2A04C]/80 transition-colors duration-300"
-              >
-                <FaEdit size={20} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              {/* {usherData.experience?.length ? (
-                usherData.experience.map((exp, index) => (
-                  <div key={index} className="text-gray-300">
-                    <p>{exp}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-400">No experiences added yet</p>
-              )} */}
-
-            </div>
-          </div>
-
-          {/* Companies Opinions Section */}
-          <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Companies Opinions</h3>
-            <div className="space-y-4">
-              {/* {usherData.companyOpinions?.length === 0 ? (
-                <p className="text-gray-400">No opinions yet</p>
-              ) : (
-                usherData.companyOpinions.map((opinion, index) => (
-                  <div key={index} className="flex justify-between items-center text-gray-300">
-                    <span>{opinion.company}</span>
-                    <span>{opinion.rating}</span>
-                  </div>
-                ))
-              )} */}
-
+                  <FaEdit />
+                </button>
+              </h3>
+              <p className="text-white">{usherData?.experience || 'No experience added'}</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog 
+        open={isEditingProfile} 
+        onClose={() => setIsEditingProfile(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Profile</DialogTitle>
+        <DialogContent>
+          <div className="space-y-4 mt-4">
+            <TextField
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={editFormData.firstName}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={editFormData.lastName}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Username"
+              name="userName"
+              value={editFormData.userName}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Phone"
+              name="phone"
+              value={editFormData.phone}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Address"
+              name="address"
+              value={editFormData.address}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+          <Button 
+            onClick={handleProfileUpdate} 
+            variant="contained"
+            sx={{
+              backgroundColor: '#C2A04C',
+              '&:hover': { backgroundColor: '#9c7c3c' }
+            }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Experience Dialog */}
+      <Dialog 
+        open={isEditingExperience} 
+        onClose={() => setIsEditingExperience(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Experience</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Experience"
+            name="experience"
+            value={editFormData.experience}
+            onChange={handleInputChange}
+            className="mt-4"
+            placeholder="Describe your experience..."
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditingExperience(false)}>Cancel</Button>
+          <Button 
+            onClick={handleExperienceUpdate} 
+            variant="contained"
+            sx={{
+              backgroundColor: '#C2A04C',
+              '&:hover': { backgroundColor: '#9c7c3c' }
+            }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
