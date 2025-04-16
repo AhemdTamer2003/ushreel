@@ -2,6 +2,127 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
+import PropTypes from "prop-types";
+
+// Logo component
+const Logo = () => (
+  <div className="flex items-center font-bold text-2xl">
+    <span className="text-black uppercase">U</span>
+    <span className="text-black">she</span>
+    <span className="bg-black text-white px-1.5 rounded uppercase">R</span>
+    <span className="text-black">eel</span>
+  </div>
+);
+
+const NavLink = ({ to, onClick, children }) => (
+  <Link
+    to={to}
+    className="text-white font-bold hover:text-[#f1e8d8] hover:shadow-sm 
+              transition-all duration-300 transform hover:-translate-y-0.5"
+    onClick={onClick}
+  >
+    {children}
+  </Link>
+);
+
+NavLink.propTypes = {
+  to: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
+  children: PropTypes.node.isRequired,
+};
+
+const ExploreDropdownContent = ({ onClick }) => (
+  <div className="absolute bg-white text-black py-2 mt-1 w-40 rounded-lg shadow-lg">
+    <Link
+      to="/usherregister"
+      className="block px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
+      onClick={onClick}
+    >
+      Usher
+    </Link>
+    <Link
+      to="/companyregister"
+      className="block px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
+      onClick={onClick}
+    >
+      Company
+    </Link>
+    <Link
+      to="/contentcreatorregister"
+      className="block px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
+      onClick={onClick}
+    >
+      Content Creator
+    </Link>
+  </div>
+);
+
+ExploreDropdownContent.propTypes = {
+  onClick: PropTypes.func,
+};
+
+const MobileExploreDropdown = ({ isOpen, onClick }) =>
+  isOpen && (
+    <div className="flex flex-col bg-white text-black mt-2 rounded-lg shadow-lg">
+      <Link
+        to="/usherregister"
+        className="px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
+        onClick={onClick}
+      >
+        Usher
+      </Link>
+      <Link
+        to="/companyregister"
+        className="px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
+        onClick={onClick}
+      >
+        Company
+      </Link>
+      <Link
+        to="/contentcreatorregister"
+        className="px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
+        onClick={onClick}
+      >
+        Content Creator
+      </Link>
+    </div>
+  );
+
+MobileExploreDropdown.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClick: PropTypes.func,
+};
+
+// Auth buttons component
+const AuthButtons = ({ onClick, isMobile = false }) => {
+  const baseClasses = isMobile
+    ? "w-full max-w-xs px-4 py-2 text-center hover:shadow-md transition-all duration-300"
+    : "px-4 py-2 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5";
+
+  return (
+    <>
+      <Link
+        to="/login"
+        className={`${baseClasses} bg-white text-black border border-black rounded-md`}
+        onClick={onClick}
+      >
+        Login
+      </Link>
+      <Link
+        to="/register"
+        className={`${baseClasses} bg-black text-white rounded-md`}
+        onClick={onClick}
+      >
+        Register
+      </Link>
+    </>
+  );
+};
+
+AuthButtons.propTypes = {
+  onClick: PropTypes.func,
+  isMobile: PropTypes.bool,
+};
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,23 +151,14 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex justify-between items-center relative">
         {/* Logo */}
         <div className="flex items-center">
-          <div className="flex items-center font-bold text-2xl">
-            <span className="text-black uppercase">U</span>
-            <span className="text-black">she</span>
-            <span className="bg-black text-white px-1.5 rounded uppercase">R</span>
-            <span className="text-black">eel</span>
-          </div>
+          <Logo />
         </div>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6 text-sm">
-          <Link 
-            to="/" 
-            className="text-white font-bold hover:text-[#f1e8d8] hover:shadow-sm 
-                     transition-all duration-300 transform hover:-translate-y-0.5"
-          >
+          <NavLink to="/" onClick={handleLinkClick}>
             Home
-          </Link>
+          </NavLink>
 
           {/* Explore Dropdown */}
           <div className="relative" ref={dropdownRef}>
@@ -59,146 +171,66 @@ export default function Navbar() {
               Explore <span className="ml-1">▼</span>
             </button>
             {exploreDropdown && (
-              <div className="absolute bg-white text-black py-2 mt-1 w-40 rounded-lg shadow-lg">
-                <Link 
-                  to="/usherregister" 
-                  className="block px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
-                  onClick={handleLinkClick}
-                >
-                  Usher
-                </Link>
-                <Link 
-                  to="/companyregister" 
-                  className="block px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
-                  onClick={handleLinkClick}
-                >
-                  Company
-                </Link>
-                <Link 
-                  to="/contentcreatorregister" 
-                  className="block px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
-                  onClick={handleLinkClick}
-                >
-                  Content Creator
-                </Link>
-              </div>
+              <ExploreDropdownContent onClick={handleLinkClick} />
             )}
           </div>
-          <Link 
-            to="/about" 
-            className="text-white font-bold hover:text-[#f1e8d8] hover:shadow-sm 
-                     transition-all duration-300 transform hover:-translate-y-0.5"
-          >
+
+          <NavLink to="/about" onClick={handleLinkClick}>
             About
-          </Link>
-          <Link 
-            to="/contact" 
-            className="text-white font-bold hover:text-[#f1e8d8] hover:shadow-sm 
-                     transition-all duration-300 transform hover:-translate-y-0.5"
-          >
+          </NavLink>
+          <NavLink to="/contact" onClick={handleLinkClick}>
             Contact Us
-          </Link>
+          </NavLink>
         </div>
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex space-x-2">
-          <Link 
-            to="/login" 
-            className="px-4 py-2 bg-white text-black border border-black rounded-md
-                     hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            Login
-          </Link>
-          <Link 
-            to="/register" 
-            className="px-4 py-2 bg-black text-white rounded-md
-                     hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            Register
-          </Link>
+          <AuthButtons onClick={handleLinkClick} />
         </div>
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden text-black" onClick={handleMobileMenuToggle}>
-          {isOpen ? <CloseIcon fontSize="large" /> : <MenuIcon fontSize="large" />}
+        <button
+          className="md:hidden text-black"
+          onClick={handleMobileMenuToggle}
+        >
+          {isOpen ? (
+            <CloseIcon fontSize="large" />
+          ) : (
+            <MenuIcon fontSize="large" />
+          )}
         </button>
       </div>
 
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden flex flex-col items-center mt-3 space-y-4 bg-[#C2A04C] py-4">
-          <Link 
-            to="/" 
-            className="text-white font-bold hover:text-[#f1e8d8] transition-colors duration-300"
-            onClick={handleLinkClick}
-          >
+          <NavLink to="/" onClick={handleLinkClick}>
             Home
-          </Link>
+          </NavLink>
 
           <div className="text-center">
-            <button 
+            <button
               className="text-white font-bold hover:text-[#f1e8d8] transition-colors duration-300"
               onClick={handleDropdownToggle}
             >
               Explore ▼
             </button>
-            {exploreDropdown && (
-              <div className="flex flex-col bg-white text-black mt-2 rounded-lg shadow-lg">
-                <Link 
-                  to="/usherregister" 
-                  className="px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
-                  onClick={handleLinkClick}
-                >
-                  Usher
-                </Link>
-                <Link 
-                  to="/companyregister" 
-                  className="px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
-                  onClick={handleLinkClick}
-                >
-                  Company
-                </Link>
-                <Link 
-                  to="/contentcreatorregister" 
-                  className="px-4 py-2 hover:bg-gray-100 transition-colors duration-200"
-                  onClick={handleLinkClick}
-                >
-                  Content Creator
-                </Link>
-              </div>
-            )}
+            <MobileExploreDropdown
+              isOpen={exploreDropdown}
+              onClick={handleLinkClick}
+            />
           </div>
 
-          <Link 
-            to="/about" 
-            className="text-white font-bold hover:text-[#f1e8d8] transition-colors duration-300"
-            onClick={handleLinkClick}
-          >
+          <NavLink to="/about" onClick={handleLinkClick}>
             About
-          </Link>
-          <Link 
-            to="/contact" 
-            className="text-white font-bold hover:text-[#f1e8d8] transition-colors duration-300"
-            onClick={handleLinkClick}
-          >
+          </NavLink>
+          <NavLink to="/contact" onClick={handleLinkClick}>
             Contact
-          </Link>
-          <Link 
-            to="/login" 
-            className="w-full max-w-xs px-4 py-2 bg-white text-black border border-black 
-                     rounded-md text-center hover:shadow-md transition-all duration-300"
-            onClick={handleLinkClick}
-          >
-            Login
-          </Link>
-          <Link 
-            to="/register" 
-            className="w-full max-w-xs px-4 py-2 bg-black text-white rounded-md text-center
-                     hover:shadow-md transition-all duration-300"
-            onClick={handleLinkClick}
-          >
-            Register
-          </Link>
+          </NavLink>
+
+          <div className="flex flex-col space-y-2 w-full items-center">
+            <AuthButtons onClick={handleLinkClick} isMobile={true} />
+          </div>
         </div>
       )}
     </nav>

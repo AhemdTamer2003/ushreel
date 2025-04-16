@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Button, 
-  FormControl, 
-  InputLabel, 
-  MenuItem, 
-  Select, 
-  CircularProgress, 
+import { useState, useEffect } from "react";
+import {
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  CircularProgress,
   TextField,
   IconButton,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import usherregisterimg from "../../assets/AuthAssets/usherpic.png";
-import AuthInput from "./Auth-Components/AuthInput";
 import { Link } from "react-router-dom";
 import { registerUshear } from "../../redux/Services/auth";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function UsherRegister() {
   const dispatch = useDispatch();
@@ -43,14 +42,16 @@ function UsherRegister() {
   const [errors, setErrors] = useState({});
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
-  const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+  const handleClickShowConfirmPassword = () =>
+    setShowConfirmPassword(!showConfirmPassword);
 
   const validateForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d{11}$/;
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -93,7 +94,7 @@ function UsherRegister() {
     const { confirmPassword, ...dataToSend } = formData;
     try {
       await dispatch(registerUshear(dataToSend)).unwrap();
-      localStorage.setItem('registrationEmail', formData.email);
+      localStorage.setItem("registrationEmail", formData.email);
       toast.success("Registration successful! Please verify your email.");
       navigate("/verify-email", { state: { email: formData.email } });
     } catch (err) {
@@ -102,27 +103,27 @@ function UsherRegister() {
   };
 
   const inputStyle = {
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: 'white',
-      borderRadius: '4px',
-      height: '48px',
-      '& fieldset': {
-        borderColor: '#D4A537',
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "white",
+      borderRadius: "4px",
+      height: "48px",
+      "& fieldset": {
+        borderColor: "#D4A537",
       },
-      '&:hover fieldset': {
-        borderColor: '#D4A537',
+      "&:hover fieldset": {
+        borderColor: "#D4A537",
       },
-      '&.Mui-focused fieldset': {
-        borderColor: '#D4A537',
-      },
-    },
-    '& .MuiInputLabel-root': {
-      color: '#666',
-      '&.Mui-focused': {
-        color: '#D4A537',
+      "&.Mui-focused fieldset": {
+        borderColor: "#D4A537",
       },
     },
-    marginBottom: '20px'
+    "& .MuiInputLabel-root": {
+      color: "#666",
+      "&.Mui-focused": {
+        color: "#D4A537",
+      },
+    },
+    marginBottom: "20px",
   };
 
   return (
@@ -137,7 +138,9 @@ function UsherRegister() {
 
       <div className="flex-1 px-8 lg:px-16 py-8 overflow-y-auto">
         <div className="max-w-xl mx-auto">
-          <h1 className="text-[#D4A537] text-3xl font-bold mb-2">Register Now</h1>
+          <h1 className="text-[#D4A537] text-3xl font-bold mb-2">
+            Register Now
+          </h1>
           <p className="text-gray-400 mb-8">And make events more easier</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -211,7 +214,10 @@ function UsherRegister() {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={handleClickShowConfirmPassword} edge="end">
+                    <IconButton
+                      onClick={handleClickShowConfirmPassword}
+                      edge="end"
+                    >
                       {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -272,13 +278,13 @@ function UsherRegister() {
                 fontSize: "16px",
                 fontWeight: "bold",
                 marginTop: "24px",
-                '&:hover': {
-                  backgroundColor: '#b88c2e'
+                "&:hover": {
+                  backgroundColor: "#b88c2e",
                 },
-                '&:disabled': {
-                  backgroundColor: '#7c6320',
-                  color: '#ffffff70'
-                }
+                "&:disabled": {
+                  backgroundColor: "#7c6320",
+                  color: "#ffffff70",
+                },
               }}
             >
               {loading ? (
@@ -290,7 +296,10 @@ function UsherRegister() {
 
             <p className="text-center text-gray-400 mt-4">
               Already have an account?{" "}
-              <Link to="/login" className="text-[#D4A537] hover:text-[#b88c2e] transition-colors">
+              <Link
+                to="/login"
+                className="text-[#D4A537] hover:text-[#b88c2e] transition-colors"
+              >
                 Login
               </Link>
             </p>

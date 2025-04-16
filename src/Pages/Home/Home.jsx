@@ -1,4 +1,3 @@
-import React from 'react'
 import Navbar from '../../components/Shared/Navbar'
 import home from '../../assets/ushrealHome.png';
 function Home() {

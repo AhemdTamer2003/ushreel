@@ -1,22 +1,108 @@
-// src/components/Login.jsx
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   TextField,
   InputAdornment,
   IconButton,
   CircularProgress,
-  Paper,
-  Box,
 } from "@mui/material";
-import { Visibility, VisibilityOff, Email } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser, selectAuth, clearError } from '../../redux/Slices/authSlice.jsx';
+import { useDispatch, useSelector } from "react-redux";
+import {
+  loginUser,
+  selectAuth,
+  clearError,
+} from "../../redux/Slices/authSlice.jsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import loginpic from "../../assets/AuthAssets/loginbackground.png";
+import PropTypes from "prop-types";
+import Header from "../../components/Shared/Header";
+import PageContainer from "../../components/Shared/PageContainer";
+
+const validateLoginForm = (formData) => {
+  const errors = {};
+
+  if (!formData.emailOrPhoneOrUsername.trim()) {
+    errors.emailOrPhoneOrUsername = "This field is required";
+  }
+
+  if (!formData.password.trim()) {
+    errors.password = "Password is required";
+  }
+
+  return errors;
+};
+
+const PasswordField = ({
+  value,
+  onChange,
+  error,
+  helperText,
+  showPassword,
+  toggleShowPassword,
+}) => (
+  <TextField
+    label="Password"
+    name="password"
+    type={showPassword ? "text" : "password"}
+    value={value}
+    onChange={onChange}
+    error={!!error}
+    helperText={helperText}
+    fullWidth
+    required
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start" sx={{ color: "#D4A537" }}>
+          <Lock />
+        </InputAdornment>
+      ),
+      endAdornment: (
+        <InputAdornment position="end">
+          <IconButton
+            aria-label="toggle password visibility"
+            onClick={toggleShowPassword}
+            edge="end"
+            sx={{ color: "#D4A537" }}
+          >
+            {showPassword ? <VisibilityOff /> : <Visibility />}
+          </IconButton>
+        </InputAdornment>
+      ),
+    }}
+    sx={{
+      "& .MuiOutlinedInput-root": {
+        color: "white",
+        "& fieldset": {
+          borderColor: "#D4A537",
+        },
+        "&:hover fieldset": {
+          borderColor: "#D4A537",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: "#D4A537",
+        },
+      },
+      "& .MuiInputLabel-root": {
+        color: "#D4A537",
+      },
+      "& .MuiFormHelperText-root": {
+        color: "#f44336",
+      },
+    }}
+  />
+);
+
+PasswordField.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
+  helperText: PropTypes.string,
+  showPassword: PropTypes.bool.isRequired,
+  toggleShowPassword: PropTypes.func.isRequired,
+};
 
 function Login() {
   const dispatch = useDispatch();
@@ -33,14 +119,12 @@ function Login() {
     password: "",
   });
 
-  // Clear error on unmount
   useEffect(() => {
     return () => {
       dispatch(clearError());
     };
   }, [dispatch]);
 
-  // Handle success messages and errors
   useEffect(() => {
     const successMessage = location.state?.successMessage;
     if (successMessage) {
@@ -58,22 +142,14 @@ function Login() {
     }
   }, [location, navigate, error, message, dispatch]);
 
+  const toggleShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   const validateForm = () => {
-    let isValid = true;
-    const newErrors = { ...errors };
-    
-    if (!formData.emailOrPhoneOrUsername.trim()) {
-      newErrors.emailOrPhoneOrUsername = "This field is required";
-      isValid = false;
-    }
-    
-    if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
-      isValid = false;
-    }
-    
-    setErrors(newErrors);
-    return isValid;
+    const validationErrors = validateLoginForm(formData);
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
   };
 
   const handleChange = (e) => {
@@ -82,6 +158,7 @@ function Login() {
       ...prev,
       [name]: value,
     }));
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -98,15 +175,15 @@ function Login() {
     }
 
     try {
-      const result = await dispatch(loginUser({
-        emailOrPhoneOrUsername: formData.emailOrPhoneOrUsername.trim(),
-        password: formData.password.trim(),
-      })).unwrap();
-
-      console.log('Login Response:', result);
+      const result = await dispatch(
+        loginUser({
+          emailOrPhoneOrUsername: formData.emailOrPhoneOrUsername.trim(),
+          password: formData.password.trim(),
+        })
+      ).unwrap();
 
       if (!result) {
-        throw new Error('No response received');
+        throw new Error("No response received");
       }
 
       // Check if email verification is required
@@ -128,216 +205,143 @@ function Login() {
         toast.success("Welcome back!");
         navigate("/usher-profile");
       }
-
     } catch (error) {
-      console.error('Login error:', error);
+      // Handle error responses
+      handleLoginError(error);
+    }
+  };
 
-      // Handle specific error cases
-      if (error.response) {
-        const errorMessage = error.response.data?.message;
-        switch (error.response.status) {
-          case 400:
-            toast.error(errorMessage || "Invalid email or password format");
-            break;
-          case 401:
-            toast.error(errorMessage || "Invalid credentials");
-            setFormData(prev => ({ ...prev, password: "" }));
-            break;
-          case 403:
-            if (errorMessage === "Email verification required") {
-              navigate("/verify-otp", {
-                state: {
-                  email: formData.emailOrPhoneOrUsername,
-                  fromLogin: true,
-                },
-              });
-            } else {
-              toast.error("Access denied");
-              setFormData(prev => ({ ...prev, password: "" }));
-            }
-            break;
-          case 404:
-            toast.error("Account not found");
-            break;
-          case 429:
-            toast.error("Too many attempts. Please try again later.");
-            break;
-          case 500:
-            toast.error("Server error. Please try again later.");
-            break;
-          default:
-            toast.error(errorMessage || "Login failed");
-        }
-      } else if (error.request) {
-        toast.error("Network error. Please check your connection.");
-      } else {
-        toast.error(error.message || "An unexpected error occurred");
+  const handleLoginError = (error) => {
+    if (error.response) {
+      const errorMessage = error.response.data?.message;
+      switch (error.response.status) {
+        case 400:
+          toast.error(errorMessage || "Invalid email or password format");
+          break;
+        case 401:
+          toast.error(errorMessage || "Invalid credentials");
+          setFormData((prev) => ({ ...prev, password: "" }));
+          break;
+        case 403:
+          if (errorMessage === "Email verification required") {
+            navigate("/verify-otp", {
+              state: {
+                email: formData.emailOrPhoneOrUsername,
+                fromLogin: true,
+              },
+            });
+          } else {
+            toast.error("Access denied");
+            setFormData((prev) => ({ ...prev, password: "" }));
+          }
+          break;
+        case 404:
+          toast.error("Account not found");
+          break;
+        case 429:
+          toast.error("Too many attempts. Please try again later.");
+          break;
+        case 500:
+          toast.error("Server error. Please try again later.");
+          break;
+        default:
+          toast.error(errorMessage || "Login failed");
       }
+    } else if (error.request) {
+      toast.error("Network error. Please check your connection.");
+    } else {
+      toast.error(error.message || "An unexpected error occurred");
     }
   };
 
   return (
-    <div
-      className="min-h-screen flex justify-center items-center px-4 py-8 bg-black"
-      style={{
-        backgroundImage: `url(${loginpic})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      <Paper
-        elevation={24}
-        className="p-8 rounded-xl w-full max-w-md"
-        sx={{
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        }}
-      >
-        <Box className="text-center mb-8">
-          <div className="w-16 h-16 bg-[#D4A537] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Email sx={{ fontSize: 32, color: 'white' }} />
-          </div>
-          <h2 className="text-3xl text-[#D4A537] font-bold mb-2">
-            Welcome Back
-          </h2>
-          <p className="text-gray-300">
-            Enter your credentials to access your account
+    <PageContainer backgroundImage={loginpic}>
+      <Header
+        title="Welcome Back"
+        subtitle="Enter your credentials to access your account"
+        icon={<Email sx={{ fontSize: 32, color: "white" }} />}
+      />
+
+      <form onSubmit={handleSubmit} className="gap-4 flex flex-col">
+        <TextField
+          label="Email / Phone / Username"
+          name="emailOrPhoneOrUsername"
+          value={formData.emailOrPhoneOrUsername}
+          onChange={handleChange}
+          error={!!errors.emailOrPhoneOrUsername}
+          helperText={errors.emailOrPhoneOrUsername}
+          fullWidth
+          required
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start" sx={{ color: "#D4A537" }}>
+                <Email />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              color: "white",
+              "& fieldset": {
+                borderColor: "#D4A537",
+              },
+              "&:hover fieldset": {
+                borderColor: "#D4A537",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#D4A537",
+              },
+            },
+            "& .MuiInputLabel-root": {
+              color: "#D4A537",
+            },
+            "& .MuiFormHelperText-root": {
+              color: "#f44336",
+            },
+          }}
+        />
+
+        <PasswordField
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+          helperText={errors.password}
+          showPassword={showPassword}
+          toggleShowPassword={toggleShowPassword}
+        />
+
+        <Link
+          to="/forgot-password"
+          className="text-[#D4A537] text-sm hover:underline block text-right"
+        >
+          Forgot password?
+        </Link>
+
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          sx={{
+            bgcolor: "#D4A537",
+            color: "white",
+            py: 1.5,
+            "&:hover": { bgcolor: "#b88c2e" },
+          }}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
+        </Button>
+
+        <div className="text-center">
+          <p className="text-gray-400 text-sm mb-4">
+            Don&apos;t have an account?{" "}
+            <Link to="/register" className="text-[#D4A537] hover:underline">
+              Sign up
+            </Link>
           </p>
-        </Box>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <TextField
-            label="Email / Phone / Username"
-            name="emailOrPhoneOrUsername"
-            value={formData.emailOrPhoneOrUsername}
-            onChange={handleChange}
-            error={!!errors.emailOrPhoneOrUsername}
-            helperText={errors.emailOrPhoneOrUsername}
-            fullWidth
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start" sx={{ color: '#D4A537' }}>
-                  <Email />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': {
-                  borderColor: '#D4A537',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#D4A537',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#D4A537',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: '#D4A537',
-              },
-              '& .MuiFormHelperText-root': {
-                color: '#f44336',
-              },
-            }}
-          />
-
-          <TextField
-            label="Password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            value={formData.password}
-            onChange={handleChange}
-            error={!!errors.password}
-            helperText={errors.password}
-            fullWidth
-            required
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                    sx={{ color: '#D4A537' }}
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                color: 'white',
-                '& fieldset': {
-                  borderColor: '#D4A537',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#D4A537',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#D4A537',
-                },
-              },
-              '& .MuiInputLabel-root': {
-                color: '#D4A537',
-              },
-              '& .MuiFormHelperText-root': {
-                color: '#f44336',
-              },
-            }}
-          />
-
-          <div className="flex justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-[#D4A537] hover:text-[#b88c2e] transition-colors text-sm"
-            >
-              Forgot Password?
-            </Link>
-          </div>
-
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            disabled={loading}
-            sx={{
-              backgroundColor: "#D4A537",
-              height: "48px",
-              fontSize: "1rem",
-              fontWeight: "bold",
-              '&:hover': {
-                backgroundColor: '#b88c2e',
-              },
-              '&:disabled': {
-                backgroundColor: '#7c6320',
-                color: '#ffffff70',
-              },
-            }}
-          >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              "Log in"
-            )}
-          </Button>
-
-          <div className="text-center text-gray-300">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="text-[#D4A537] hover:text-[#b88c2e] transition-colors"
-            >
-              Create Account
-            </Link>
-          </div>
-        </form>
-      </Paper>
-    </div>
+        </div>
+      </form>
+    </PageContainer>
   );
 }
 

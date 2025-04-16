@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from "@mui/material";
 import companyregisterimg from "../../assets/AuthAssets/companyregister.png";
-import AuthInput from "./Auth-Components/AuthInput";
+import AuthInput from "../../components/Auth/AuthInput";
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';

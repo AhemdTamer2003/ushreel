@@ -2,7 +2,7 @@ import React from 'react';
 import registerpic1 from '../../assets/AuthAssets/registerpic1.png';
 import registerpic2 from '../../assets/AuthAssets/registerpic2.png';
 import registerpic3 from '../../assets/AuthAssets/registerpic3.png';
-import RegisterCard from './Auth-Components/RegisterCard';
+import RegisterCard from '../../components/Auth/RegisterCard';
 
 function Register() {
     const cardData = [
