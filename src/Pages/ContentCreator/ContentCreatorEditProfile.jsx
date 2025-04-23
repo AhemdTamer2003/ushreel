@@ -1,330 +1,308 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaCamera, FaInstagram, FaFacebook, FaArrowLeft, FaTimes } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaCamera, FaInstagram, FaFacebook, FaArrowLeft } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  updateContentCreatorProfile,
+  uploadProfilePicture,
+} from "../../redux/Services/contentCreator";
+import { toast } from "react-toastify";
 
-function CreatorEditProfile() {
+function ContentCreatorEditProfile() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const initialData = location.state?.profileData || {
-    id: "15245637",
-    name: "Samir William",
-    email: "testmail@gmail.com",
-    phone: "01010101010",
-    location: "Cairo,Egypt",
-    gender: "Male",
-    specialty: "Photography",
-    profileImage: "/path-to-profile-image.jpg",
-    experiences: [
-      {
-        id: 1,
-        description: "exhibition coverage at Cairo ict"
-      },
-      {
-        id: 2,
-        description: "Amr Diab concert coverage"
-      }
-    ],
-    photos: [
-      "/path-to-photo-1.jpg",
-      "/path-to-photo-2.jpg"
-    ],
-    platformLinks: {
-      instagram: "@Samir_wiliam",
-      facebook: "Samir Wiliam"
+  const dispatch = useDispatch();
+
+  const { profile, updateStatus, updateError } = useSelector(
+    (state) => state.contentCreator
+  );
+
+  const [formData, setFormData] = useState({
+    phone: profile?.phone || "",
+    fieldOfWork: profile?.fieldOfWork || [],
+    portfolioLinks: {
+      facebook: profile?.portfolioLinks?.facebook || "",
+      instagram: profile?.portfolioLinks?.instagram || "",
+      youtube: profile?.portfolioLinks?.youtube || "",
+      tiktok: profile?.portfolioLinks?.tiktok || "",
+      website: profile?.portfolioLinks?.website || "",
+    },
+  });
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validateSocialLinks = (links) => {
+    const errors = {};
+
+    if (
+      links.facebook &&
+      !links.facebook.match(/^https?:\/\/(www\.)?facebook\.com\/.*$/)
+    ) {
+      errors.facebook =
+        "Must be a valid Facebook profile URL (e.g., https://facebook.com/username)";
     }
+
+    if (
+      links.instagram &&
+      !links.instagram.match(/^https?:\/\/(www\.)?instagram\.com\/.*$/)
+    ) {
+      errors.instagram =
+        "Must be a valid Instagram profile URL (e.g., https://instagram.com/username)";
+    }
+
+    return errors;
   };
 
-  const [profileData, setProfileData] = useState(initialData);
-  const [newExperience, setNewExperience] = useState('');
-  const [isDirty, setIsDirty] = useState(false);
+  useEffect(() => {
+    if (!profile) {
+      navigate("/content-creator-profile");
+    }
+  }, [profile, navigate]);
 
   useEffect(() => {
-    setIsDirty(true);
-  }, [profileData]);
+    if (updateError) {
+      toast.error(updateError);
+    }
+  }, [updateError]);
+
+  useEffect(() => {
+    if (updateStatus === "succeeded") {
+      toast.success("Profile updated successfully");
+      navigate("/content-creator-profile");
+    }
+  }, [updateStatus, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      const newFormData = {
+        ...formData,
+        [parent]: {
+          ...formData[parent],
+          [child]: value,
+        },
+      };
 
-  const handleAddExperience = () => {
-    if (newExperience.trim()) {
-      setProfileData(prev => ({
+      if (parent === "portfolioLinks") {
+        setValidationErrors((prev) => ({
+          ...prev,
+          [child]: "",
+        }));
+      }
+
+      setFormData(newFormData);
+    } else {
+      setFormData((prev) => ({
         ...prev,
-        experiences: [
-          ...prev.experiences,
-          {
-            id: prev.experiences.length + 1,
-            description: newExperience
-          }
-        ]
+        [name]: value,
       }));
-      setNewExperience('');
     }
+    setIsDirty(true);
   };
 
-  const handleRemoveExperience = (id) => {
-    setProfileData(prev => ({
-      ...prev,
-      experiences: prev.experiences.filter(exp => exp.id !== id)
-    }));
-  };
-
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileData(prev => ({
-          ...prev,
-          profileImage: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        await dispatch(uploadProfilePicture(file)).unwrap();
+        toast.success("Profile picture updated successfully");
+      } catch (error) {
+        toast.error(error || "Failed to upload profile picture");
+      }
     }
   };
 
-  const handlePhotoUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const newPhotos = files.map(file => URL.createObjectURL(file));
-    setProfileData(prev => ({
-      ...prev,
-      photos: [...prev.photos, ...newPhotos]
-    }));
-  };
+  const handleSaveChanges = async () => {
+    const linkErrors = validateSocialLinks(formData.portfolioLinks);
 
-  const handleRemovePhoto = (index) => {
-    setProfileData(prev => ({
-      ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
-    }));
-  };
+    if (Object.keys(linkErrors).length > 0) {
+      setValidationErrors(linkErrors);
+      Object.values(linkErrors).forEach((error) => {
+        toast.error(error);
+      });
+      return;
+    }
 
-  const handleSaveChanges = () => {
-    // Add your API call here
-    console.log('Saving profile:', profileData);
-    setIsDirty(false);
-    navigate('/content-creator-profile', { state: { profileData } });
+    try {
+      await dispatch(updateContentCreatorProfile(formData)).unwrap();
+    } catch (error) {
+      toast.error(error || "Failed to update profile");
+    }
   };
 
   const handleCancel = () => {
     if (isDirty) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
-        navigate('/content-creator-profile');
+      if (
+        window.confirm(
+          "You have unsaved changes. Are you sure you want to leave?"
+        )
+      ) {
+        navigate("/content-creator-profile");
       }
     } else {
-      navigate('/content-creator-profile');
+      navigate("/content-creator-profile");
     }
   };
 
+  if (!profile) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C] p-8">
+      <div className="max-w-4xl mx-auto">
         <button
           onClick={handleCancel}
-          className="flex items-center text-black hover:text-white transition-colors"
+          className="flex items-center text-[#C2A04C] mb-6 hover:text-white transition-colors"
         >
-          <FaArrowLeft className="mr-2" /> Back
+          <FaArrowLeft className="mr-2" /> Back to Profile
         </button>
-        <div className="text-black font-bold text-xl">Edit Profile</div>
-        <div className="flex items-center space-x-2">
-          <span className="text-black">{profileData.name}</span>
-          <img 
-            src={profileData.profileImage} 
-            alt="Profile" 
-            className="w-8 h-8 rounded-full border-2 border-black"
-          />
-        </div>
-      </nav>
 
-      <div className="container mx-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                      transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]">
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative group">
-              <img 
-                src={profileData.profileImage} 
-                alt="Profile" 
-                className="w-32 h-32 rounded-full mb-4 border-4 border-[#C2A04C]
-                         transform transition-all duration-300 group-hover:opacity-75"
+        <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
+          <h2 className="text-[#C2A04C] text-2xl font-bold mb-6">
+            Edit Profile
+          </h2>
+
+          {/* Profile Picture Section */}
+          <div className="mb-6 flex flex-col items-center">
+            <div className="relative">
+              <img
+                src={profile.profilePicture}
+                alt="Profile"
+                className="w-32 h-32 rounded-full border-4 border-[#C2A04C]"
               />
-              <label className="absolute bottom-4 right-0 bg-[#C2A04C] rounded-full p-2 cursor-pointer
-                              transform transition-all duration-300 hover:scale-110">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
+              <label
+                htmlFor="profile-upload"
+                className="absolute bottom-0 right-0 bg-[#C2A04C] p-2 rounded-full cursor-pointer hover:bg-[#C2A04C]/80 transition-colors"
+              >
                 <FaCamera className="text-black" />
               </label>
+              <input
+                type="file"
+                id="profile-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
             </div>
-            <h2 className="text-[#C2A04C] text-2xl font-bold mb-2">{profileData.name}</h2>
-            <p className="text-gray-400 text-sm">#{profileData.id}</p>
           </div>
 
-          {/* Input Fields */}
-          <div className="space-y-4">
-            {[
-              { icon: FaEnvelope, name: 'email', placeholder: 'Email' },
-              { icon: FaPhone, name: 'phone', placeholder: 'Phone' },
-              { icon: FaMapMarkerAlt, name: 'location', placeholder: 'Location' },
-              { icon: FaUser, name: 'gender', placeholder: 'Gender' },
-              { icon: FaCamera, name: 'specialty', placeholder: 'Specialty' }
-            ].map((field) => (
-              <div key={field.name} 
-                   className="flex items-center bg-black/40 rounded-lg p-3
-                            transform transition-all duration-300 hover:bg-black/60">
-                <field.icon className="text-[#C2A04C] mr-2" />
-                <input
-                  type={field.name === 'email' ? 'email' : 'text'}
-                  name={field.name}
-                  value={profileData[field.name]}
-                  onChange={handleInputChange}
-                  className="bg-transparent text-gray-300 w-full focus:outline-none"
-                  placeholder={field.placeholder}
-                />
-              </div>
-            ))}
+          {/* Contact Information */}
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="text-[#C2A04C] block mb-2">Phone Number</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="w-full bg-gray-800 text-white border border-[#C2A04C]/20 rounded-lg p-2 focus:outline-none focus:border-[#C2A04C]"
+              />
+            </div>
+
+            <div>
+              <label className="text-[#C2A04C] block mb-2">Field of Work</label>
+              <select
+                name="fieldOfWork"
+                value={formData.fieldOfWork}
+                onChange={handleInputChange}
+                className="w-full bg-gray-800 text-white border border-[#C2A04C]/20 rounded-lg p-2 focus:outline-none focus:border-[#C2A04C]"
+                multiple
+              >
+                <option value="Writing">Writing</option>
+                <option value="Reel Maker">Reel Maker</option>
+                <option value="Video Editor">Video Editor</option>
+                <option value="Photographer">Photographer</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex space-x-4 mt-6">
+          {/* Social Links */}
+          <div className="space-y-4 mb-6">
+            <h3 className="text-[#C2A04C] text-xl font-bold">
+              Social Media Links
+            </h3>
+
+            <div>
+              <label className="text-[#C2A04C] block mb-2">
+                <FaFacebook className="inline mr-2" /> Facebook
+              </label>
+              <input
+                type="url"
+                name="portfolioLinks.facebook"
+                value={formData.portfolioLinks.facebook}
+                onChange={handleInputChange}
+                placeholder="https://facebook.com/your-profile"
+                className={`w-full bg-gray-800 text-white border ${
+                  validationErrors.facebook
+                    ? "border-red-500"
+                    : "border-[#C2A04C]/20"
+                } rounded-lg p-2 focus:outline-none focus:border-[#C2A04C]`}
+              />
+              {validationErrors.facebook && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.facebook}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[#C2A04C] block mb-2">
+                <FaInstagram className="inline mr-2" /> Instagram
+              </label>
+              <input
+                type="url"
+                name="portfolioLinks.instagram"
+                value={formData.portfolioLinks.instagram}
+                onChange={handleInputChange}
+                placeholder="https://instagram.com/your-profile"
+                className={`w-full bg-gray-800 text-white border ${
+                  validationErrors.instagram
+                    ? "border-red-500"
+                    : "border-[#C2A04C]/20"
+                } rounded-lg p-2 focus:outline-none focus:border-[#C2A04C]`}
+              />
+              {validationErrors.instagram && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.instagram}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-[#C2A04C] block mb-2">Website</label>
+              <input
+                type="url"
+                name="portfolioLinks.website"
+                value={formData.portfolioLinks.website}
+                onChange={handleInputChange}
+                placeholder="https://your-website.com"
+                className="w-full bg-gray-800 text-white border border-[#C2A04C]/20 rounded-lg p-2 focus:outline-none focus:border-[#C2A04C]"
+              />
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-4">
             <button
               onClick={handleCancel}
-              className="flex-1 bg-black text-[#C2A04C] py-2 rounded-full 
-                       hover:bg-black/80 transition-all duration-300
-                       transform hover:scale-105"
+              className="px-6 py-2 bg-gray-800 text-white rounded-full hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveChanges}
-              className="flex-1 bg-[#C2A04C] text-black py-2 rounded-full 
-                       hover:bg-[#C2A04C]/80 transition-all duration-300
-                       transform hover:scale-105"
-              disabled={!isDirty}
+              disabled={updateStatus === "loading" || !isDirty}
+              className={`px-6 py-2 bg-[#C2A04C] text-black rounded-full 
+                ${
+                  updateStatus === "loading" || !isDirty
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#C2A04C]/80 transition-colors"
+                }`}
             >
-              Save Changes
+              {updateStatus === "loading" ? "Saving..." : "Save Changes"}
             </button>
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Experiences Section */}
-          <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]">
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Experiences</h3>
-            <div className="space-y-4 max-h-48 overflow-y-auto mb-4 pr-2">
-              {profileData.experiences.map((exp, index) => (
-                <div key={exp.id} 
-                     className="flex justify-between items-center text-gray-300 bg-black/40 p-3 rounded-lg
-                              transform transition-all duration-300 hover:bg-black/60">
-                  <p>{index + 1} - {exp.description}</p>
-                  <button
-                    onClick={() => handleRemoveExperience(exp.id)}
-                    className="text-red-500 hover:text-red-400 transition-colors"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={newExperience}
-                onChange={(e) => setNewExperience(e.target.value)}
-                className="flex-1 bg-black/40 text-gray-300 rounded-lg p-2 
-                         border border-[#C2A04C]/20 focus:outline-none focus:border-[#C2A04C]
-                         transform transition-all duration-300"
-                placeholder="Add new experience"
-              />
-              <button
-                onClick={handleAddExperience}
-                className="bg-[#C2A04C] text-black px-4 py-2 rounded-lg
-                         hover:bg-[#C2A04C]/80 transition-all duration-300
-                         transform hover:scale-105"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          {/* Photos Section */}
-          <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]">
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Photos</h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {profileData.photos.map((photo, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={photo}
-                    alt={`Portfolio ${index + 1}`}
-                    className="w-full h-40 object-cover rounded-lg
-                             transform transition-all duration-300 group-hover:opacity-75"
-                  />
-                  <button
-                    onClick={() => handleRemovePhoto(index)}
-                    className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full
-                             opacity-0 group-hover:opacity-100 transition-all duration-300
-                             hover:bg-red-500"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <label className="block">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="block w-full text-sm text-gray-300
-                         file:mr-4 file:py-2 file:px-4
-                         file:rounded-full file:border-0
-                         file:text-sm file:font-semibold
-                         file:bg-[#C2A04C] file:text-black
-                         hover:file:bg-[#C2A04C]/80
-                         cursor-pointer"
-              />
-            </label>
-          </div>
-
-          {/* Platform Links Section */}
-          <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]">
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Platform Links</h3>
-            <div className="space-y-4">
-              {[
-                { icon: FaInstagram, name: 'instagram', placeholder: 'Instagram username' },
-                { icon: FaFacebook, name: 'facebook', placeholder: 'Facebook username' }
-              ].map((platform) => (
-                <div key={platform.name} 
-                     className="flex items-center bg-black/40 rounded-lg p-3
-                              transform transition-all duration-300 hover:bg-black/60">
-                  <platform.icon className="text-[#C2A04C] mr-2" />
-                  <input
-                    type="text"
-                    value={profileData.platformLinks[platform.name]}
-                    onChange={(e) => setProfileData(prev => ({
-                      ...prev,
-                      platformLinks: {
-                        ...prev.platformLinks,
-                        [platform.name]: e.target.value
-                      }
-                    }))}
-                    className="bg-transparent text-gray-300 w-full focus:outline-none"
-                    placeholder={platform.placeholder}
-                  />
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
@@ -332,4 +310,4 @@ function CreatorEditProfile() {
   );
 }
 
-export default CreatorEditProfile;
+export default ContentCreatorEditProfile;

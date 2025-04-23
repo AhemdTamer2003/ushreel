@@ -197,16 +197,28 @@ function Login() {
         return;
       }
 
-      // Check if experience needs to be added
-      if (result.user && !result.user.hasAddedExperience) {
-        toast.info("Please complete your profile by adding your experience");
-        navigate("/add-experience");
+      // Handle role-based redirects
+      if (result.role === "contentCreator") {
+        if (result.user && !result.user.hasAddedExperience) {
+          toast.info("Please complete your profile by adding your experience");
+          navigate("/add-experience");
+        } else {
+          toast.success("Welcome back!");
+          navigate("/content-creator-profile");
+        }
+      } else if (result.role === "usher") {
+        if (result.user && !result.user.hasAddedExperience) {
+          toast.info("Please complete your profile by adding your experience");
+          navigate("/add-experience");
+        } else {
+          toast.success("Welcome back!");
+          navigate("/usher-profile");
+        }
       } else {
         toast.success("Welcome back!");
-        navigate("/usher-profile");
+        navigate("/company-profile");
       }
     } catch (error) {
-      // Handle error responses
       handleLoginError(error);
     }
   };

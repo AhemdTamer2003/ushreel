@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FaPhone,
-  FaMapMarkerAlt,
   FaEdit,
   FaSignOutAlt,
   FaCalendar,
@@ -35,7 +34,6 @@ function UsherProfile() {
   const { profile, loading, error, updateStatus, updateError } = useSelector(
     (state) => state.usher
   );
-  console.log(profile);
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -72,7 +70,7 @@ function UsherProfile() {
         birthdate: profile.birthdate
           ? new Date(profile.birthdate).toISOString().split("T")[0]
           : "",
-        experience: profile.experienceRole?.join(", ") || "",
+        experience: profile.experience || "",
       });
     }
   }, [profile]);
@@ -106,11 +104,7 @@ function UsherProfile() {
   };
 
   const handleExperienceUpdate = () => {
-    const experienceArray = editFormData.experience
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-    dispatch(updateUsherExperience(experienceArray));
+    dispatch(updateUsherExperience(editFormData.experience));
   };
 
   const handleProfilePictureUpload = (event) => {
@@ -393,19 +387,19 @@ function UsherProfile() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Edit Experience Roles</DialogTitle>
+        <DialogTitle>Edit Experience</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
             multiline
             rows={4}
-            label="Experience Roles"
+            label="Experience"
             name="experience"
             value={editFormData.experience}
             onChange={handleInputChange}
             className="mt-4"
-            placeholder="Enter your experience roles (comma-separated)"
-            helperText="Enter multiple roles separated by commas (e.g., 'Security, Event Management, Crowd Control')"
+            placeholder="Describe your experience..."
+            helperText="Describe your experience in detail. The system will analyze it to determine your roles."
           />
         </DialogContent>
         <DialogActions>

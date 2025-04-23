@@ -1,14 +1,17 @@
 import apiClient from "../../utils/axiosConfig";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
-// Fetch usher profile
-export const fetchUsherProfile = createAsyncThunk(
-  "usher/fetchProfile",
+// Fetch content creator profile
+export const fetchContentCreatorProfile = createAsyncThunk(
+  "contentCreator/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get("/usher/profile");
+      const response = await apiClient.get("/content-creator/profile");
       return response.data;
     } catch (error) {
+      if (!error.response) {
+        throw error;
+      }
       return rejectWithValue(
         error.response?.data?.message ||
           error.message ||
@@ -18,12 +21,15 @@ export const fetchUsherProfile = createAsyncThunk(
   }
 );
 
-// Update usher profile
-export const updateUsherProfile = createAsyncThunk(
-  "usher/updateProfile",
+// Update content creator profile
+export const updateContentCreatorProfile = createAsyncThunk(
+  "contentCreator/updateProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.patch("/usher/profile", profileData);
+      const response = await apiClient.patch(
+        "/content-creator/profile",
+        profileData
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -35,39 +41,16 @@ export const updateUsherProfile = createAsyncThunk(
   }
 );
 
-// Update usher experience
-export const updateUsherExperience = createAsyncThunk(
-  "usher/updateExperience",
-  async (experienceData, { rejectWithValue }) => {
-    try {
-      // First update the experience text
-      const response = await apiClient.patch("/usher/profile", {
-        experience: Array.isArray(experienceData)
-          ? experienceData.join(", ")
-          : experienceData,
-      });
-
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to update experience"
-      );
-    }
-  }
-);
-
 // Upload profile picture
 export const uploadProfilePicture = createAsyncThunk(
-  "usher/uploadProfilePicture",
+  "contentCreator/uploadProfilePicture",
   async (pictureFile, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append("profilePicture", pictureFile);
 
       const response = await apiClient.patch(
-        "/usher/profile/upload-picture",
+        "/content-creator/profile/upload-picture",
         formData,
         {
           headers: {
