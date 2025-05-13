@@ -6,7 +6,7 @@ export const createJob = createAsyncThunk(
   "job/create",
   async (jobData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("/job", jobData);
+      const response = await apiClient.post("/jobs", jobData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -21,7 +21,7 @@ export const getRecommendedUshers = createAsyncThunk(
   "job/getRecommendedUshers",
   async (jobId, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/job/${jobId}/usher-selection`);
+      const response = await apiClient.get(`/jobs/${jobId}/usher-selection`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -38,7 +38,7 @@ export const selectUshersForJob = createAsyncThunk(
   "job/selectUshers",
   async ({ jobId, selectedUshers }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post(`/job/${jobId}/usher-selection`, {
+      const response = await apiClient.post(`/jobs/${jobId}/usher-selection`, {
         selectedUshers,
       });
       return response.data;

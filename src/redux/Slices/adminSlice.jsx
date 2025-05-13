@@ -9,8 +9,18 @@ import {
   rejectJob,
 } from "../Services/admin";
 
+const safelyParseJSON = (json) => {
+  try {
+    return json ? JSON.parse(json) : null;
+  } catch (e) {
+    console.error("Failed to parse JSON:", e);
+    return null;
+  }
+};
+
+const adminData = localStorage.getItem("adminData");
 const initialState = {
-  admin: JSON.parse(localStorage.getItem("adminData")) || null,
+  admin: safelyParseJSON(adminData),
   isAdminAuthenticated: !!localStorage.getItem("adminToken"),
   loading: false,
   error: null,

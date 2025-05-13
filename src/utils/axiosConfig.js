@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_BASEURL,
+  baseURL: import.meta.env.VITE_BASEURL || "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -10,13 +10,9 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Skip token for registration endpoints
     if (config.url === "/auth/admin/register") {
-      // No token needed for admin registration
       console.log("Skipping token for admin registration");
-    }
-    // For admin routes, use adminToken
-    else if (
+    } else if (
       config.url.startsWith("/admin") ||
       config.url.startsWith("/auth/admin")
     ) {
@@ -25,7 +21,6 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${adminToken}`;
       }
     } else {
-      // For regular user routes, use normal token
       const token = localStorage.getItem("token");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
