@@ -1,47 +1,126 @@
 // Recommendations.jsx
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaSearch, FaFilter } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  FaSearch,
+  FaFilter,
+  FaArrowLeft,
+  FaUser,
+  FaCheckCircle,
+} from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getRecommendedUshers,
+  selectUshersForJob,
+} from "../../redux/Services/job";
+import { toast } from "react-toastify";
+import Navbar from "../../components/Shared/Navbar";
+import { CircularProgress } from "@mui/material";
 
 function Recommendations() {
-  const [searchUsher, setSearchUsher] = useState('');
-  const [searchCC, setSearchCC] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
+  const {
+    jobData,
+    recommendedUshers,
+    recommendedUshersLoading,
+    recommendedUshersError,
+    selectUshersLoading,
+  } = useSelector((state) => state.job);
 
-  // Mock data for demonstration
-  const recommendedUshers = [
-    { id: 1, name: 'Name first', feedback: 'feedback' },
-    { id: 2, name: 'Name first', feedback: 'feedback' },
-    { id: 3, name: 'Name first', feedback: 'feedback' },
-    { id: 4, name: 'Name first', feedback: 'feedback' },
-    { id: 5, name: 'Name first', feedback: 'feedback' },
-    { id: 6, name: 'Name first', feedback: 'feedback' },
-  ];
+  const [searchUsher, setSearchUsher] = useState("");
+  const [selectedUshers, setSelectedUshers] = useState([]);
+  const [hasRequested, setHasRequested] = useState(false);
 
-  const ushersList = [
-    { id: 1, name: 'Name first', feedback: 'feedback' },
-    { id: 2, name: 'Name first', feedback: 'feedback' },
-    { id: 3, name: 'Name first', feedback: 'feedback' },
-    { id: 4, name: 'Name first', feedback: 'feedback' },
-    { id: 5, name: 'Name first', feedback: 'feedback' },
-  ];
+  // Get jobId from location state or job data
+  const jobId = location.state?.jobId || jobData?.jobId;
 
-  const contentCreatorsList = [
-    { id: 1, name: 'Name first', feedback: 'feedback', followers: '5M' },
-    { id: 2, name: 'Name first', feedback: 'feedback', followers: '5M' },
-    { id: 3, name: 'Name first', feedback: 'feedback', followers: '5M' },
-    { id: 4, name: 'Name first', feedback: 'feedback', followers: '5M' },
-    { id: 5, name: 'Name first', feedback: 'feedback', followers: '5M' },
-  ];
+  // Fetch recommended ushers on component mount if jobId is available
+  useEffect(() => {
+    if (jobId && !hasRequested) {
+      dispatch(getRecommendedUshers(jobId));
+      setHasRequested(true);
+    }
+  }, [jobId, dispatch, hasRequested]);
 
-  const ProfileCard = ({ name, feedback, followers }) => (
-    <div className="flex items-center space-x-4 p-3 hover:bg-gray-700/30 rounded-lg transition-colors">
-      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-        <span className="text-white text-xl">👤</span>
+  // Handle errors
+  useEffect(() => {
+    if (recommendedUshersError) {
+      toast.error(recommendedUshersError);
+    }
+  }, [recommendedUshersError]);
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleSelectUsher = (usherId) => {
+    if (selectedUshers.includes(usherId)) {
+      setSelectedUshers(selectedUshers.filter((id) => id !== usherId));
+    } else {
+      setSelectedUshers([...selectedUshers, usherId]);
+    }
+  };
+
+  const handleNext = () => {
+    if (selectedUshers.length === 0) {
+      toast.error("Please select at least one usher");
+      return;
+    }
+
+    dispatch(
+      selectUshersForJob({
+        jobId,
+        selectedUshers,
+      })
+    );
+
+    // Navigate to confirmation page or back to profile
+    navigate("/company-profile", { state: { jobCreated: true } });
+  };
+
+  // Filter ushers based on search term
+  const filteredUshers = recommendedUshers.filter((usher) =>
+    usher.fullName.toLowerCase().includes(searchUsher.toLowerCase())
+  );
+
+  const ProfileCard = ({
+    id,
+    fullName,
+    experienceRole,
+    gender,
+    profilePicture,
+  }) => (
+    <div
+      className={`flex items-center space-x-4 p-3 border rounded-lg transition-all cursor-pointer
+                ${
+                  selectedUshers.includes(id)
+                    ? "border-[#C2A04C] bg-[#C2A04C]/20"
+                    : "border-gray-700 hover:bg-gray-700/30"
+                }`}
+      onClick={() => handleSelectUsher(id)}
+    >
+      <div className="relative">
+        {selectedUshers.includes(id) && (
+          <FaCheckCircle className="absolute -top-1 -right-1 text-green-500 text-lg z-10" />
+        )}
+        <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+          {profilePicture ? (
+            <img
+              src={profilePicture}
+              alt={fullName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <FaUser className="text-white text-xl" />
+          )}
+        </div>
       </div>
-      <div>
-        <h3 className="text-white">{name}</h3>
-        <p className="text-gray-400 text-sm">{feedback}</p>
-        {followers && <p className="text-gray-400 text-sm">{followers} followers</p>}
+      <div className="flex-1">
+        <h3 className="text-white">{fullName}</h3>
+        <p className="text-gray-400 text-sm">{experienceRole || "Usher"}</p>
+        {gender && <p className="text-gray-400 text-sm">Gender: {gender}</p>}
       </div>
     </div>
   );
@@ -53,7 +132,7 @@ function Recommendations() {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-gray-200 p-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
-        placeholder="Search"
+        placeholder="Search ushers"
       />
       <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-2">
         <FaFilter className="text-gray-500 cursor-pointer" />
@@ -62,59 +141,79 @@ function Recommendations() {
     </div>
   );
 
+  if (recommendedUshersLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C] flex items-center justify-center">
+        <CircularProgress sx={{ color: "#D4A537" }} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
-        <div className="text-black font-bold text-xl">UsheReel</div>
-        <div className="flex space-x-4">
-          <Link to="/" className="text-black hover:text-white transition-colors">Home</Link>
-          <Link to="/explore" className="text-black hover:text-white transition-colors">Explore</Link>
-          <Link to="/about" className="text-black hover:text-white transition-colors">About</Link>
-          <Link to="/contact" className="text-black hover:text-white transition-colors">Contact</Link>
-        </div>
-        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-          <span className="text-black">C</span>
-        </div>
-      </nav>
+      <Navbar forceAuth={true} />
 
       <div className="container mx-auto p-8">
-        <div className="grid grid-cols-3 gap-8">
-          {/* Recommended Ushers */}
-          <div className="bg-black/80 rounded-lg p-6 border border-[#C2A04C]/20">
-            <h2 className="text-[#C2A04C] font-bold text-xl mb-4">Recommended Ushers</h2>
-            <div className="space-y-4">
-              {recommendedUshers.map(usher => (
-                <ProfileCard key={usher.id} {...usher} />
-              ))}
-            </div>
-          </div>
+        <button
+          onClick={handleBack}
+          className="flex items-center text-[#C2A04C] mb-6 hover:text-white transition-colors"
+        >
+          <FaArrowLeft className="mr-2" /> Back
+        </button>
 
-          {/* Ushers List */}
-          <div className="bg-black/80 rounded-lg p-6 border border-[#C2A04C]/20">
-            <h2 className="text-[#C2A04C] font-bold text-xl mb-4">Ushers List</h2>
-            <SearchBar value={searchUsher} onChange={setSearchUsher} />
-            <div className="mt-4 space-y-4">
-              {ushersList.map(usher => (
-                <ProfileCard key={usher.id} {...usher} />
-              ))}
-            </div>
-          </div>
+        <div className="bg-black/80 rounded-lg p-6 border border-[#C2A04C]/20 mb-8">
+          <h2 className="text-[#C2A04C] font-bold text-2xl mb-4">
+            {jobData?.title || "Recommended Ushers"}
+          </h2>
+          <p className="text-gray-300 mb-6">
+            Select the ushers you'd like to work with for this project.
+          </p>
 
-          {/* Content Creators List */}
-          <div className="bg-black/80 rounded-lg p-6 border border-[#C2A04C]/20">
-            <h2 className="text-[#C2A04C] font-bold text-xl mb-4">CC List</h2>
-            <SearchBar value={searchCC} onChange={setSearchCC} />
-            <div className="mt-4 space-y-4">
-              {contentCreatorsList.map(creator => (
-                <ProfileCard key={creator.id} {...creator} />
-              ))}
-            </div>
+          <SearchBar value={searchUsher} onChange={setSearchUsher} />
+
+          <div className="mt-6">
+            <p className="text-white mb-2">
+              <span className="text-[#C2A04C] font-bold">Selected:</span>{" "}
+              {selectedUshers.length} ushers
+            </p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredUshers.length > 0 ? (
+            filteredUshers.map((usher) => (
+              <ProfileCard
+                key={usher.id}
+                id={usher.id}
+                fullName={usher.fullName}
+                experienceRole={usher.experienceRole}
+                gender={usher.gender}
+                profilePicture={usher.profilePicture}
+              />
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-10">
+              <p className="text-gray-300">
+                No ushers match your search criteria
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 flex justify-center">
-          <button className="bg-[#C2A04C] text-black px-6 py-2 rounded-full hover:bg-[#C2A04C]/80 transition-all duration-300 transform hover:scale-105">
-            Next
+          <button
+            onClick={handleNext}
+            disabled={selectUshersLoading || selectedUshers.length === 0}
+            className={`bg-[#C2A04C] text-black px-6 py-2 rounded-full 
+                      hover:bg-[#C2A04C]/80 transition-all duration-300 
+                      transform hover:scale-105
+                      ${
+                        selectUshersLoading || selectedUshers.length === 0
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+          >
+            {selectUshersLoading ? "Processing..." : "Confirm Selection"}
           </button>
         </div>
       </div>

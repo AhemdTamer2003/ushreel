@@ -14,6 +14,7 @@ function App() {
       ...routes.auth,
       ...routes.passwordReset,
       ...routes.profile,
+      ...routes.admin,
       ...routes.notFound,
     ];
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { AddAPhotoOutlined } from "@mui/icons-material";
+import { useSelector, useDispatch } from "react-redux";
+import { uploadProfilePicture } from "../../redux/Services/company";
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialog-paper": {
@@ -71,17 +73,32 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    name: companyData?.name || "",
-    email: companyData?.email || "",
-    phone: companyData?.phone || "",
-    location: companyData?.location || "",
-    website: companyData?.website || "",
-    industry: companyData?.industry || "",
-    profileImage: companyData?.profileImage || "",
+    name: "",
+    phone: "",
+    address: "",
   });
+
+  const dispatch = useDispatch();
+  const { updateStatus, updateError } = useSelector((state) => state.company);
+  const isLoading = updateStatus === "loading";
+
+  useEffect(() => {
+    if (companyData && open) {
+      setFormData({
+        name: companyData.name || "",
+        phone: companyData.phone || "",
+        address: companyData.address || "",
+      });
+    }
+  }, [companyData, open]);
+
+  useEffect(() => {
+    if (updateError) {
+      setError(updateError);
+    }
+  }, [updateError]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -101,18 +118,8 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          profileImage: reader.result,
-        }));
-        setError(null);
-      };
-      reader.onerror = () => {
-        setError("Error reading file");
-      };
-      reader.readAsDataURL(file);
+      // Upload the profile picture
+      dispatch(uploadProfilePicture(file));
     }
   };
 
@@ -121,34 +128,14 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
       setError("Company name is required");
       return false;
     }
-    if (!formData.email.trim()) {
-      setError("Email is required");
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setError("Invalid email format");
-      return false;
-    }
+
     return true;
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!validateForm()) return;
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      onSave(formData);
-      handleClose();
-    } catch (err) {
-      setError(err.message || "Error updating profile");
-    } finally {
-      setIsLoading(false);
-    }
+    setError(null);
+    onSave(formData);
   };
 
   return (
@@ -174,7 +161,7 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
         <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
           <Stack direction="column" alignItems="center" spacing={2}>
             <Avatar
-              src={formData.profileImage}
+              src={companyData.profilePicture}
               sx={{
                 width: 100,
                 height: 100,
@@ -188,6 +175,7 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
               type="file"
               hidden
               onChange={handleImageChange}
+              disabled={isLoading}
             />
             <label htmlFor="company-logo-upload">
               <IconButton
@@ -196,6 +184,7 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
                   color: "#C2A04C",
                   "&:hover": { backgroundColor: "rgba(194, 160, 76, 0.1)" },
                 }}
+                disabled={isLoading}
               >
                 <AddAPhotoOutlined />
               </IconButton>
@@ -212,18 +201,7 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
           variant="outlined"
           required
           margin="normal"
-        />
-
-        <TextField
-          fullWidth
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          variant="outlined"
-          required
-          margin="normal"
+          disabled={isLoading}
         />
 
         <TextField
@@ -234,36 +212,20 @@ function CompanyEditProfileDialog({ open, handleClose, companyData, onSave }) {
           onChange={handleChange}
           variant="outlined"
           margin="normal"
+          disabled={isLoading}
         />
 
         <TextField
           fullWidth
-          label="Location"
-          name="location"
-          value={formData.location}
+          label="Address"
+          name="address"
+          value={formData.address}
           onChange={handleChange}
           variant="outlined"
+          multiline
+          rows={2}
           margin="normal"
-        />
-
-        <TextField
-          fullWidth
-          label="Website"
-          name="website"
-          value={formData.website}
-          onChange={handleChange}
-          variant="outlined"
-          margin="normal"
-        />
-
-        <TextField
-          fullWidth
-          label="Industry"
-          name="industry"
-          value={formData.industry}
-          onChange={handleChange}
-          variant="outlined"
-          margin="normal"
+          disabled={isLoading}
         />
       </DialogContent>
 

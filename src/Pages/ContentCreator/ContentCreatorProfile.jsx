@@ -13,6 +13,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchContentCreatorProfile } from "../../redux/Services/contentCreator";
 import { toast } from "react-toastify";
+import Navbar from "../../components/Shared/Navbar";
 
 function ContentCreatorProfile() {
   const navigate = useNavigate();
@@ -65,43 +66,7 @@ function ContentCreatorProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
-        <div className="text-black font-bold text-xl">UsheReel</div>
-        <div className="flex space-x-4">
-          <Link
-            to="/"
-            className="text-black hover:text-white transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            to="/explore"
-            className="text-black hover:text-white transition-colors"
-          >
-            Explore
-          </Link>
-          <Link
-            to="/about"
-            className="text-black hover:text-white transition-colors"
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="text-black hover:text-white transition-colors"
-          >
-            Contact
-          </Link>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-black">{profile.name}</span>
-          <img
-            src={profile.profileImage}
-            alt="Profile"
-            className="w-8 h-8 rounded-full border-2 border-black"
-          />
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="container mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Profile Card */}

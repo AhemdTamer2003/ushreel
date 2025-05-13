@@ -133,7 +133,7 @@ function Login() {
     }
 
     if (error) {
-      toast.error(error);
+      // toast.error(error);
       dispatch(clearError());
     }
 
@@ -182,22 +182,6 @@ function Login() {
         })
       ).unwrap();
 
-      if (!result) {
-        throw new Error("No response received");
-      }
-
-      // Check if email verification is required
-      if (result.user && !result.user.isEmailVerified) {
-        navigate("/verify-otp", {
-          state: {
-            email: formData.emailOrPhoneOrUsername,
-            fromLogin: true,
-          },
-        });
-        return;
-      }
-
-      // Handle role-based redirects
       if (result.role === "contentCreator") {
         if (result.user && !result.user.hasAddedExperience) {
           toast.info("Please complete your profile by adding your experience");
@@ -224,9 +208,23 @@ function Login() {
   };
 
   const handleLoginError = (error) => {
+    if (typeof error === "string") {
+      if (error === "Email verification required") {
+        navigate("/verify-otp", {
+          state: {
+            email: formData.emailOrPhoneOrUsername,
+            fromLogin: true,
+          },
+        });
+      } else {
+        toast.error(error);
+      }
+      return;
+    }
+
     if (error.response) {
       const errorMessage = error.response.data?.message;
-      switch (error.response.status) {
+      switch (error.status) {
         case 400:
           toast.error(errorMessage || "Invalid email or password format");
           break;
@@ -262,7 +260,7 @@ function Login() {
     } else if (error.request) {
       toast.error("Network error. Please check your connection.");
     } else {
-      toast.error(error.message || "An unexpected error occurred");
+      // toast.error(error.message || "An unexpected error occurred");
     }
   };
 

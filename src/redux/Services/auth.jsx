@@ -21,7 +21,6 @@ const registerUshear = createAsyncThunk(
         role: formData.role,
       });
       localStorage.setItem("verificationEmail", formData.email);
-      console.log("Registration Response:", response.data);
 
       if (!response.data) {
         throw new Error("No response data received");
@@ -41,32 +40,53 @@ const loginUser = createAsyncThunk(
   "auth/login",
   async (formData, { rejectWithValue }) => {
     try {
-      console.log("Login Request:", formData);
-
       const response = await apiClient.post("/auth/login", {
         emailOrPhoneOrUsername: formData.emailOrPhoneOrUsername,
         password: formData.password,
       });
 
-      console.log("Login Response:", response.data);
+      localStorage.setItem("token", response.data.token);
 
-      if (!response.data) {
-        throw new Error("No response data received");
+      if (!response.data.user && response.data.role) {
+        console.log("Creating user object from token and role");
+
+        // Create minimal user object with role
+        let userId = null;
+        try {
+          // Try to decode the JWT token to get the user ID
+          const payload = decodeJwt(response.data.token);
+          if (payload && payload.id) {
+            userId = payload.id;
+          }
+        } catch (e) {
+          console.error("Error extracting user ID from token:", e);
+        }
+
+        const userObj = {
+          id: userId,
+          role: response.data.role,
+          email: formData.emailOrPhoneOrUsername,
+        };
+
+        localStorage.setItem("user", JSON.stringify(userObj));
+      } else if (response.data.user) {
+        if (response.data.role && !response.data.user.role) {
+          response.data.user.role = response.data.role;
+        }
+
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
 
-      // Store auth data
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
       localStorage.setItem("email", formData.emailOrPhoneOrUsername);
 
-      // Update axios default headers
       apiClient.defaults.headers.common[
         "Authorization"
       ] = `Bearer ${response.data.token}`;
 
+      console.log("Login response data:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Login Error:", error);
+      console.error("Login error:", error);
       return rejectWithValue(
         error.response?.data?.message || error.message || "Login failed"
       );
@@ -157,6 +177,24 @@ const addExperience = createAsyncThunk(
 );
 
 // Helper Functions
+const decodeJwt = (token) => {
+  try {
+    if (!token) return null;
+
+    const tokenParts = token.split(".");
+    if (tokenParts.length !== 3) return null;
+
+    const base64Url = tokenParts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = atob(base64);
+
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Error decoding JWT token:", error);
+    return null;
+  }
+};
+
 const isAuthenticated = () => {
   try {
     const token = localStorage.getItem("token");
@@ -189,7 +227,6 @@ const logout = () => {
   }
 };
 
-// Export everything
 export {
   registerUshear,
   loginUser,
@@ -200,6 +237,7 @@ export {
   isAuthenticated,
   getCurrentUser,
   logout,
+  decodeJwt,
 };
 
 export default apiClient;

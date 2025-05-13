@@ -1,59 +1,85 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaArrowRight, FaCalendar, FaClock } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { createJob } from "../../redux/Services/job";
+import { toast } from "react-toastify";
+import Navbar from "../../components/Shared/Navbar";
 
 function FormDescription() {
   const navigate = useNavigate();
   const location = useLocation();
-  const selectedItems = location.state?.selectedItems || [];
+  const dispatch = useDispatch();
+  const { createJobLoading, createJobError, jobData } = useSelector(
+    (state) => state.job
+  );
+
+  // Get the selected type (online, offline, both) from location state
+  const marketingType = location.state?.type || "offline"; // Default to offline if not provided
 
   const [formData, setFormData] = useState({
-    dateFrom: '',
-    dateTo: '',
-    timeFrom: '',
-    timeTo: '',
-    location: '',
-    description: '',
-    totalUshers: '',
-    totalContentCreators: '',
+    title: "",
+    dateFrom: "",
+    dateTo: "",
+    timeFrom: "",
+    timeTo: "",
+    location: "",
+    description: "",
+    totalUshers: "",
+    totalContentCreators: "",
     selectedUsherTypes: {
       sales: false,
       activation: false,
       registration: false,
-      crowdManagement: false
+      crowdManagement: false,
     },
     selectedCreatorTypes: {
       reelMaker: false,
       photographer: false,
-      videoEditor: false
+      videoEditor: false,
     },
-    gender: ''
+    gender: "",
   });
+
+  // Handle API errors
+  useEffect(() => {
+    if (createJobError) {
+      toast.error(createJobError);
+    }
+  }, [createJobError]);
+
+  // Handle job creation success
+  useEffect(() => {
+    if (jobData) {
+      toast.success("Job created successfully!");
+      navigate("/recommendations", { state: { jobId: jobData.jobId } });
+    }
+  }, [jobData, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleCheckboxChange = (category, type) => {
-    if (category === 'ushers') {
-      setFormData(prev => ({
+    if (category === "ushers") {
+      setFormData((prev) => ({
         ...prev,
         selectedUsherTypes: {
           ...prev.selectedUsherTypes,
-          [type]: !prev.selectedUsherTypes[type]
-        }
+          [type]: !prev.selectedUsherTypes[type],
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         selectedCreatorTypes: {
           ...prev.selectedCreatorTypes,
-          [type]: !prev.selectedCreatorTypes[type]
-        }
+          [type]: !prev.selectedCreatorTypes[type],
+        },
       }));
     }
   };
@@ -63,22 +89,49 @@ function FormDescription() {
   };
 
   const handleNext = () => {
-    // Add validation here if needed
-    navigate('/recommendations', { state: { formData } });
+    // Perform validation
+    if (!formData.title) {
+      toast.error("Please enter a job title");
+      return;
+    }
+    if (!formData.dateFrom || !formData.dateTo) {
+      toast.error("Please enter both start and end dates");
+      return;
+    }
+    if (!formData.timeFrom || !formData.timeTo) {
+      toast.error("Please enter both start and end times");
+      return;
+    }
+    if (!formData.location) {
+      toast.error("Please enter a location");
+      return;
+    }
+    if (!formData.description) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    // Prepare job data based on marketing type
+    const jobData = {
+      title: formData.title,
+      description: formData.description,
+      startDate: formData.dateFrom,
+      endDate: formData.dateTo,
+      startTime: formData.timeFrom,
+      endTime: formData.timeTo,
+      location: formData.location,
+      numOfUshers: formData.totalUshers || 0,
+      preferred_gender: formData.gender || "both",
+    };
+
+    // Dispatch job creation action
+    dispatch(createJob(jobData));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
-        <div className="text-black font-bold text-xl">UsheReel</div>
-        <div className="flex space-x-4">
-          <Link to="/" className="text-black hover:text-white transition-colors">Home</Link>
-          <Link to="/explore" className="text-black hover:text-white transition-colors">Explore</Link>
-          <Link to="/about" className="text-black hover:text-white transition-colors">About</Link>
-          <Link to="/contact" className="text-black hover:text-white transition-colors">Contact</Link>
-        </div>
-        <div className="w-8 h-8"></div>
-      </nav>
+      {/* Use the shared Navbar component */}
+      <Navbar forceAuth={true} />
 
       <div className="container mx-auto p-8">
         <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
@@ -92,6 +145,20 @@ function FormDescription() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left Column - Form */}
             <div className="space-y-6">
+              <div>
+                <label className="text-[#C2A04C] font-bold block mb-2">
+                  Job Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="Enter job title"
+                  className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
+                />
+              </div>
+
               <div>
                 <h3 className="text-[#C2A04C] font-bold mb-4">Date</h3>
                 <div className="flex space-x-4">
@@ -145,7 +212,9 @@ function FormDescription() {
               </div>
 
               <div>
-                <label className="text-[#C2A04C] font-bold block mb-2">Location</label>
+                <label className="text-[#C2A04C] font-bold block mb-2">
+                  Location
+                </label>
                 <input
                   type="text"
                   name="location"
@@ -157,7 +226,9 @@ function FormDescription() {
               </div>
 
               <div>
-                <label className="text-[#C2A04C] font-bold block mb-2">Description</label>
+                <label className="text-[#C2A04C] font-bold block mb-2">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -171,61 +242,83 @@ function FormDescription() {
 
             {/* Right Column - Requirements */}
             <div className="space-y-6">
-              {/* Ushers Section */}
-              <div>
-                <h3 className="text-[#C2A04C] font-bold mb-4">Ushers</h3>
-                <input
-                  type="number"
-                  name="totalUshers"
-                  value={formData.totalUshers}
-                  onChange={handleInputChange}
-                  placeholder="Number of total ushers"
-                  className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(formData.selectedUsherTypes).map(([type, checked]) => (
-                    <label key={type} className="flex items-center space-x-2 text-gray-300">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => handleCheckboxChange('ushers', type)}
-                        className="form-checkbox text-[#C2A04C] rounded"
-                      />
-                      <span>{type.replace(/([A-Z])/g, ' $1').trim()}</span>
-                    </label>
-                  ))}
+              {/* Only show Ushers section if marketing type is offline or both */}
+              {(marketingType === "offline" || marketingType === "both") && (
+                <div>
+                  <h3 className="text-[#C2A04C] font-bold mb-4">Ushers</h3>
+                  <input
+                    type="number"
+                    name="totalUshers"
+                    value={formData.totalUshers}
+                    onChange={handleInputChange}
+                    placeholder="Number of total ushers"
+                    className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(formData.selectedUsherTypes).map(
+                      ([type, checked]) => (
+                        <label
+                          key={type}
+                          className="flex items-center space-x-2 text-gray-300"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              handleCheckboxChange("ushers", type)
+                            }
+                            className="form-checkbox text-[#C2A04C] rounded"
+                          />
+                          <span>{type.replace(/([A-Z])/g, " $1").trim()}</span>
+                        </label>
+                      )
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Content Creators Section */}
-              <div>
-                <h3 className="text-[#C2A04C] font-bold mb-4">Content Creators</h3>
-                <input
-                  type="number"
-                  name="totalContentCreators"
-                  value={formData.totalContentCreators}
-                  onChange={handleInputChange}
-                  placeholder="Number of total content creators"
-                  className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(formData.selectedCreatorTypes).map(([type, checked]) => (
-                    <label key={type} className="flex items-center space-x-2 text-gray-300">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => handleCheckboxChange('creators', type)}
-                        className="form-checkbox text-[#C2A04C] rounded"
-                      />
-                      <span>{type.replace(/([A-Z])/g, ' $1').trim()}</span>
-                    </label>
-                  ))}
+              {/* Only show Content Creators section if marketing type is online or both */}
+              {(marketingType === "online" || marketingType === "both") && (
+                <div>
+                  <h3 className="text-[#C2A04C] font-bold mb-4">
+                    Content Creators
+                  </h3>
+                  <input
+                    type="number"
+                    name="totalContentCreators"
+                    value={formData.totalContentCreators}
+                    onChange={handleInputChange}
+                    placeholder="Number of total content creators"
+                    className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(formData.selectedCreatorTypes).map(
+                      ([type, checked]) => (
+                        <label
+                          key={type}
+                          className="flex items-center space-x-2 text-gray-300"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              handleCheckboxChange("creators", type)
+                            }
+                            className="form-checkbox text-[#C2A04C] rounded"
+                          />
+                          <span>{type.replace(/([A-Z])/g, " $1").trim()}</span>
+                        </label>
+                      )
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Gender Selection */}
               <div>
-                <label className="text-[#C2A04C] font-bold block mb-2">Gender</label>
+                <label className="text-[#C2A04C] font-bold block mb-2">
+                  Gender
+                </label>
                 <select
                   name="gender"
                   value={formData.gender}
@@ -244,11 +337,15 @@ function FormDescription() {
           <div className="mt-8 flex justify-end">
             <button
               onClick={handleNext}
-              className="flex items-center bg-[#C2A04C] text-black px-6 py-2 rounded-full
+              disabled={createJobLoading}
+              className={`flex items-center bg-[#C2A04C] text-black px-6 py-2 rounded-full
                        hover:bg-[#C2A04C]/80 transition-all duration-300
-                       transform hover:scale-105"
+                       transform hover:scale-105 ${
+                         createJobLoading ? "opacity-50 cursor-not-allowed" : ""
+                       }`}
             >
-              Next <FaArrowRight className="ml-2" />
+              {createJobLoading ? "Creating..." : "Next"}{" "}
+              {!createJobLoading && <FaArrowRight className="ml-2" />}
             </button>
           </div>
         </div>

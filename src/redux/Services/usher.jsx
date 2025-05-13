@@ -40,15 +40,28 @@ export const updateUsherExperience = createAsyncThunk(
   "usher/updateExperience",
   async (experienceData, { rejectWithValue }) => {
     try {
-      // First update the experience text
-      const response = await apiClient.patch("/usher/profile", {
-        experience: Array.isArray(experienceData)
+      const experience =
+        typeof experienceData === "string"
+          ? experienceData
+          : Array.isArray(experienceData)
           ? experienceData.join(", ")
-          : experienceData,
+          : "";
+
+      console.log(`Sending experience update: "${experience}"`);
+
+      // Update the experience text in the profile
+      const response = await apiClient.patch("/usher/profile", {
+        experience: experience,
       });
+
+      // The backend will automatically call the AI service to analyze the text
+      // and update experienceLevel and experienceRole fields
+      // We return the full response which includes the updated profile with AI predictions
+      console.log("Backend response:", response.data);
 
       return response.data;
     } catch (error) {
+      console.error("Experience update error:", error);
       return rejectWithValue(
         error.response?.data?.message ||
           error.message ||

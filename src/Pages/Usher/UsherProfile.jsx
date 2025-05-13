@@ -1,12 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  FaPhone,
-  FaEdit,
-  FaSignOutAlt,
-  FaCalendar,
-  FaUser,
-} from "react-icons/fa";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaPhone, FaEdit, FaCalendar, FaUser, FaRobot } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,19 +19,25 @@ import {
   updateUsherExperience,
   uploadProfilePicture,
 } from "../../redux/Services/usher";
-import { clearErrors, resetUpdateStatus } from "../../redux/Slices/usherSlice";
+import {
+  clearErrors,
+  resetUpdateStatus,
+  setLastFetched,
+} from "../../redux/Slices/usherSlice";
+import Navbar from "../../components/Shared/Navbar";
 
 function UsherProfile() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { profile, loading, error, updateStatus, updateError } = useSelector(
-    (state) => state.usher
-  );
+  const { profile, loading, error, updateStatus, updateError, lastFetched } =
+    useSelector((state) => state.usher);
   const { isAuthenticated } = useSelector((state) => state.auth);
+  const authUser = useSelector((state) => state.auth.user);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingExperience, setIsEditingExperience] = useState(false);
+  const [aiProcessing, setAiProcessing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     firstName: "",
     lastName: "",
@@ -49,14 +49,42 @@ function UsherProfile() {
     experience: "",
   });
 
+  // Prevent excessive profile requests by using a ref to track if we've already fetched
+  const hasRequestedProfile = useRef(false);
+
+  // Debug logging with reduced frequency
+  const logCounter = useRef(0);
+
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error("Please log in to view your profile");
       navigate("/login");
       return;
     }
-    dispatch(fetchUsherProfile());
-  }, [isAuthenticated, dispatch, navigate]);
+
+    // Calculate if we should fetch based on:
+    // 1. We haven't fetched in this session (hasRequestedProfile is false)
+    // 2. We don't have profile data yet
+    // 3. The last fetch was more than 5 minutes ago
+    const shouldFetch =
+      (!hasRequestedProfile.current && !profile) ||
+      (!profile && lastFetched === null) ||
+      (lastFetched && Date.now() - lastFetched > 5 * 60 * 1000);
+
+    if (shouldFetch) {
+      console.log("Fetching usher profile...");
+      hasRequestedProfile.current = true;
+      dispatch(fetchUsherProfile());
+    } else if (!hasRequestedProfile.current) {
+      // Mark as requested even if we didn't fetch
+      hasRequestedProfile.current = true;
+      console.log("Using cached profile data");
+      // Update the lastFetched timestamp to prevent unnecessary refetches
+      if (profile && !lastFetched) {
+        dispatch(setLastFetched(Date.now()));
+      }
+    }
+  }, [isAuthenticated, dispatch, navigate, profile, lastFetched]);
 
   useEffect(() => {
     if (profile) {
@@ -99,12 +127,84 @@ function UsherProfile() {
     }
   }, [error, navigate, dispatch]);
 
+  useEffect(() => {
+    // Only log occasionally to reduce console spam
+    if (logCounter.current % 5 === 0) {
+      console.log("Auth state:", {
+        isAuthenticated,
+        profileLoaded: !!profile,
+        authUserLoaded: !!authUser,
+        localStorageToken: !!localStorage.getItem("token"),
+        localStorageUser: !!localStorage.getItem("user"),
+        fetchCount: logCounter.current,
+      });
+    }
+
+    logCounter.current++;
+
+    // Only try to fix auth state if token exists but not authenticated
+    if (!isAuthenticated && localStorage.getItem("token")) {
+      try {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          dispatch({ type: "auth/setUser", payload: parsedUser });
+        }
+      } catch (e) {
+        console.error("Error parsing user data:", e);
+      }
+    }
+  }, [isAuthenticated, authUser, dispatch]);
+
+  // Add cleanup for hasRequestedProfile when component unmounts
+  useEffect(() => {
+    // Reset the request flag when component unmounts
+    return () => {
+      hasRequestedProfile.current = false;
+    };
+  }, []);
+
   const handleProfileUpdate = () => {
     dispatch(updateUsherProfile(editFormData));
   };
 
   const handleExperienceUpdate = () => {
-    dispatch(updateUsherExperience(editFormData.experience));
+    setAiProcessing(true);
+    dispatch(updateUsherExperience(editFormData.experience))
+      .unwrap()
+      .then((response) => {
+        if (response.profile) {
+          if (
+            response.profile.experienceLevel ||
+            (response.profile.experienceRole &&
+              response.profile.experienceRole.length > 0)
+          ) {
+            let message = "Experience updated successfully. ";
+            message += `AI detected your level as: ${
+              response.profile.experienceLevel || "Unknown"
+            }. `;
+
+            if (
+              response.profile.experienceRole &&
+              response.profile.experienceRole.length > 0
+            ) {
+              message +=
+                "Your detected roles are: " +
+                response.profile.experienceRole.join(", ");
+            }
+
+            toast.info(message, { autoClose: 8000 });
+          } else {
+            toast.success("Experience updated successfully");
+          }
+          setIsEditingExperience(false);
+        }
+        setAiProcessing(false);
+      })
+      .catch((error) => {
+        toast.error(error || "Failed to update experience");
+        setAiProcessing(false);
+      });
   };
 
   const handleProfilePictureUpload = (event) => {
@@ -122,13 +222,6 @@ function UsherProfile() {
     }));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    toast.success("Logged out successfully");
-    navigate("/login");
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -139,6 +232,27 @@ function UsherProfile() {
     });
   };
 
+  // Function to format the profile picture URL
+  const getProfilePictureUrl = (path) => {
+    if (!path) return "/default-profile.jpg";
+
+    // If path is a full URL, return it
+    if (path.startsWith("http")) return path;
+
+    // If path is a server-side file path (starts with C:\ or similar), convert to URL
+    if (path.includes("\\uploads\\")) {
+      // Extract the part of the path after "uploads"
+      const uploadPath = path.split("uploads")[1];
+      // Replace backslashes with forward slashes
+      const formattedPath = uploadPath.replace(/\\/g, "/");
+      // Return the formatted URL
+      return `${import.meta.env.VITE_BASEURL}/uploads${formattedPath}`;
+    }
+
+    // If it's a relative path, just return it
+    return path;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-[#C2A04C]">
@@ -147,56 +261,15 @@ function UsherProfile() {
     );
   }
 
+  // Debug profile picture path
+  console.log("Profile picture path:", profile?.profilePicture);
+  const profilePicUrl = getProfilePictureUrl(profile?.profilePicture);
+  console.log("Formatted profile picture URL:", profilePicUrl);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      {/* Navigation Bar */}
-      <nav className="bg-[#C2A04C] p-4 flex justify-between items-center">
-        <div className="text-black font-bold text-xl">UsheReel</div>
-        <div className="flex space-x-4">
-          <Link
-            to="/"
-            className="text-black hover:text-white transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            to="/explore"
-            className="text-black hover:text-white transition-colors"
-          >
-            Explore
-          </Link>
-          <Link
-            to="/about"
-            className="text-black hover:text-white transition-colors"
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="text-black hover:text-white transition-colors"
-          >
-            Contact
-          </Link>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-black font-medium">
-            {profile?.firstName || "User"}
-          </span>
-          <div className="relative">
-            <img
-              src={profile?.profilePicture || "/default-profile.jpg"}
-              alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-black"
-            />
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-black hover:text-white transition-colors"
-          >
-            <FaSignOutAlt size={20} />
-          </button>
-        </div>
-      </nav>
+      {/* Use shared Navbar component with forced auth */}
+      <Navbar forceAuth={true} />
 
       {/* Main Content */}
       <div className="container mx-auto p-8">
@@ -205,9 +278,13 @@ function UsherProfile() {
           <div className="flex items-center space-x-8 mb-8">
             <div className="relative">
               <img
-                src={profile?.profilePicture || "/default-profile.jpg"}
+                src={profilePicUrl}
                 alt="Profile"
                 className="w-32 h-32 rounded-full object-cover border-4 border-[#C2A04C]"
+                onError={(e) => {
+                  console.error("Error loading profile image:", e);
+                  e.target.src = "/default-profile.jpg";
+                }}
               />
               <label className="absolute bottom-2 right-2 cursor-pointer bg-[#C2A04C] rounded-full p-2">
                 <input
@@ -259,28 +336,82 @@ function UsherProfile() {
                   {formatDate(profile?.birthdate) || "Not specified"}
                 </span>
               </div>
+
+              {/* Experience Section */}
+              <div className="mt-8">
+                <h3 className="text-[#C2A04C] text-xl font-bold flex items-center justify-between mb-3">
+                  My Experience
+                  <div className="flex items-center gap-3">
+                    {aiProcessing && (
+                      <div className="flex items-center text-[#C2A04C] animate-pulse">
+                        <FaRobot className="mr-1" />
+                        <span className="text-sm">AI analyzing...</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setIsEditingExperience(true)}
+                      className="text-sm hover:text-[#9c7c3c]"
+                      title="Edit your experience"
+                    >
+                      <FaEdit />
+                    </button>
+                  </div>
+                </h3>
+                <div className="bg-black/30 p-3 rounded border border-[#C2A04C]/30">
+                  <p className="text-white">
+                    {profile?.experience || "No experience added yet"}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-4">
-              <h3 className="text-[#C2A04C] text-xl font-bold flex items-center justify-between">
-                Experience Roles
-                <button
-                  onClick={() => setIsEditingExperience(true)}
-                  className="text-sm hover:text-[#9c7c3c]"
-                >
-                  <FaEdit />
-                </button>
-              </h3>
-              <div className="text-white">
-                {profile?.experienceRole &&
-                profile.experienceRole.length > 0 ? (
-                  <ul className="list-disc list-inside">
-                    {profile.experienceRole.map((exp, index) => (
-                      <li key={index}>{exp}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No experience roles added"
-                )}
+            <div className="space-y-6">
+              {/* AI-Detected Experience Level */}
+              <div>
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-2">
+                  Experience Level
+                </h3>
+                <div className="bg-black/30 p-3 rounded border border-[#C2A04C]/30">
+                  {profile?.experienceLevel ? (
+                    <div className="flex items-center gap-2">
+                      <span className="bg-[#C2A04C] text-black px-3 py-1 rounded-full text-sm font-medium">
+                        {profile.experienceLevel}
+                      </span>
+                      <span className="text-gray-400 text-sm">
+                        (AI detected)
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-gray-400">Not yet determined</p>
+                  )}
+                </div>
+              </div>
+
+              {/* AI-Detected Experience Roles */}
+              <div>
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-2">
+                  Experience Roles
+                </h3>
+                <div className="bg-black/30 p-3 rounded border border-[#C2A04C]/30">
+                  {profile?.experienceRole &&
+                  profile.experienceRole.length > 0 ? (
+                    <div className="space-y-2">
+                      {profile.experienceRole.map((role, index) => (
+                        <div
+                          key={index}
+                          className="bg-[#C2A04C]/20 px-3 py-2 rounded flex items-center gap-2"
+                        >
+                          <div className="w-2 h-2 rounded-full bg-[#C2A04C]"></div>
+                          <span className="text-white">{role}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400">
+                      No experience roles detected yet. Update your experience
+                      description to get AI-based role suggestions.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -296,7 +427,7 @@ function UsherProfile() {
       >
         <DialogTitle>Edit Profile</DialogTitle>
         <DialogContent>
-          <div className="space-y-4 mt-4">
+          <div className="gap-4 flex flex-col mt-4">
             <TextField
               fullWidth
               label="First Name"

@@ -1,10 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
-  fetchUsherProfile,
-  updateUsherProfile,
-  updateUsherExperience,
+  fetchCompanyProfile,
+  updateCompanyProfile,
   uploadProfilePicture,
-} from "../Services/usher";
+} from "../Services/company";
 
 const initialState = {
   profile: null,
@@ -12,11 +11,10 @@ const initialState = {
   error: null,
   updateStatus: "idle",
   updateError: null,
-  lastFetched: null,
 };
 
-const usherSlice = createSlice({
-  name: "usher",
+const companySlice = createSlice({
+  name: "company",
   initialState,
   reducers: {
     clearErrors: (state) => {
@@ -25,54 +23,43 @@ const usherSlice = createSlice({
     },
     resetUpdateStatus: (state) => {
       state.updateStatus = "idle";
-    },
-    setLastFetched: (state, action) => {
-      state.lastFetched = action.payload || Date.now();
+      state.updateError = null;
     },
   },
   extraReducers: (builder) => {
     // Fetch Profile
     builder
-      .addCase(fetchUsherProfile.pending, (state) => {
+      .addCase(fetchCompanyProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUsherProfile.fulfilled, (state, action) => {
+      .addCase(fetchCompanyProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.profile = action.payload.profile;
-        state.lastFetched = Date.now();
+        state.profile = action.payload;
+        state.error = null;
       })
-      .addCase(fetchUsherProfile.rejected, (state, action) => {
+      .addCase(fetchCompanyProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload || "Failed to fetch profile";
       });
 
     // Update Profile
     builder
-      .addCase(updateUsherProfile.pending, (state) => {
+      .addCase(updateCompanyProfile.pending, (state) => {
         state.updateStatus = "loading";
         state.updateError = null;
       })
-      .addCase(updateUsherProfile.fulfilled, (state, action) => {
+      .addCase(updateCompanyProfile.fulfilled, (state, action) => {
         state.updateStatus = "succeeded";
-        state.profile = action.payload.profile;
-      })
-      .addCase(updateUsherProfile.rejected, (state, action) => {
-        state.updateStatus = "failed";
-        state.updateError = action.payload;
-      });
-
-    // Update Experience
-    builder
-      .addCase(updateUsherExperience.pending, (state) => {
-        state.updateStatus = "loading";
+        if (action.payload.company) {
+          state.profile = {
+            ...state.profile,
+            ...action.payload.company,
+          };
+        }
         state.updateError = null;
       })
-      .addCase(updateUsherExperience.fulfilled, (state, action) => {
-        state.updateStatus = "succeeded";
-        state.profile = action.payload.profile;
-      })
-      .addCase(updateUsherExperience.rejected, (state, action) => {
+      .addCase(updateCompanyProfile.rejected, (state, action) => {
         state.updateStatus = "failed";
         state.updateError = action.payload;
       });
@@ -85,14 +72,18 @@ const usherSlice = createSlice({
       })
       .addCase(uploadProfilePicture.fulfilled, (state, action) => {
         state.updateStatus = "succeeded";
-        if (action.payload.profile) {
-          state.profile = action.payload.profile;
+        if (action.payload.company) {
+          state.profile = {
+            ...state.profile,
+            ...action.payload.company,
+          };
         } else if (action.payload.profilePicture) {
           state.profile = {
             ...state.profile,
             profilePicture: action.payload.profilePicture,
           };
         }
+        state.updateError = null;
       })
       .addCase(uploadProfilePicture.rejected, (state, action) => {
         state.updateStatus = "failed";
@@ -101,6 +92,5 @@ const usherSlice = createSlice({
   },
 });
 
-export const { clearErrors, resetUpdateStatus, setLastFetched } =
-  usherSlice.actions;
-export default usherSlice.reducer;
+export const { clearErrors, resetUpdateStatus } = companySlice.actions;
+export default companySlice.reducer;

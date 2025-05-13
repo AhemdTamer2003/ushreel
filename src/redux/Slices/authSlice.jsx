@@ -9,19 +9,19 @@ import {
   addExperience,
   registerUshear,
   logout as logoutService,
-} from "../Services/auth.jsx"; // Note the .jsx extension
+} from "../Services/auth.jsx";
 
-// Helper function to safely parse JSON
 const safeJSONParse = (data) => {
+  if (!data) return null;
+
   try {
-    return data ? JSON.parse(data) : null;
+    return JSON.parse(data);
   } catch (error) {
     console.error("Error parsing JSON:", error);
     return null;
   }
 };
 
-// Helper function to safely get local storage item
 const getLocalStorageItem = (key) => {
   try {
     return localStorage.getItem(key);
@@ -31,7 +31,6 @@ const getLocalStorageItem = (key) => {
   }
 };
 
-// Helper function to safely set local storage item
 const setLocalStorageItem = (key, value) => {
   try {
     localStorage.setItem(
@@ -45,10 +44,8 @@ const setLocalStorageItem = (key, value) => {
   }
 };
 
-// Get initial user data
 const initialUser = safeJSONParse(getLocalStorageItem("user"));
 
-// Initial state with safe JSON parsing
 const initialState = {
   user: initialUser,
   token: getLocalStorageItem("token"),
@@ -134,16 +131,43 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         if (action.payload) {
           state.loading = false;
-          state.user = action.payload.user;
-          state.token = action.payload.token;
-          state.isAuthenticated = true;
-          state.isEmailVerified = action.payload.user?.isEmailVerified || false;
-          state.hasAddedExperience =
-            action.payload.user?.hasAddedExperience || false;
           state.error = null;
+          state.isAuthenticated = true;
+          state.token = action.payload.token;
           state.message = action.payload.message || "Login successful!";
 
-          setLocalStorageItem("user", action.payload.user);
+          const role = action.payload.role;
+
+          if (!action.payload.user) {
+            let userId = null;
+            try {
+              const tokenParts = action.payload.token.split(".");
+              if (tokenParts.length >= 2) {
+                const tokenPayload = JSON.parse(atob(tokenParts[1]));
+                userId = tokenPayload.id;
+              }
+            } catch (e) {
+              console.error("Error extracting user ID from token:", e);
+            }
+
+            state.user = {
+              id: userId,
+              role: role,
+            };
+          } else {
+            state.user = {
+              ...action.payload.user,
+              role: role,
+            };
+
+            state.isEmailVerified =
+              action.payload.user?.isEmailVerified || false;
+            state.hasAddedExperience =
+              action.payload.user?.hasAddedExperience || false;
+          }
+
+          setLocalStorageItem("role", role);
+          setLocalStorageItem("user", state.user);
           setLocalStorageItem("token", action.payload.token);
         }
       })

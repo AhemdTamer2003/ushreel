@@ -21,6 +21,9 @@ import FormDescription from "../Pages/General/FormDescription";
 import Recommendations from "../Pages/General/Recommendations";
 import ResetOtp from "../Pages/Auth/ResetOtp";
 import { NotFound } from "../components/Shared/NotFound";
+import AdminLogin from "../Pages/Admin/AdminLogin";
+import AdminRegister from "../Pages/Admin/AdminRegister";
+import AdminDashboard from "../Pages/Admin/AdminDashboard";
 
 export const routes = {
   // Main public routes
@@ -109,6 +112,21 @@ export const routes = {
       path: "/recommendations",
       element: <Recommendations />,
       label: "Recommendations",
+    },
+  ],
+
+  // Admin routes
+  admin: [
+    { path: "/admin/login", element: <AdminLogin />, label: "Admin Login" },
+    {
+      path: "/admin/register",
+      element: <AdminRegister />,
+      label: "Admin Register",
+    },
+    {
+      path: "/admin/dashboard",
+      element: <AdminDashboard />,
+      label: "Admin Dashboard",
     },
   ],
 
