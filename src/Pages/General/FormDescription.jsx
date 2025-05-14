@@ -10,7 +10,7 @@ function FormDescription() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { createJobLoading, createJobError, jobData } = useSelector(
+  const { createJobLoading, createJobError } = useSelector(
     (state) => state.job
   );
 
@@ -49,12 +49,6 @@ function FormDescription() {
   }, [createJobError]);
 
   // Handle job creation success
-  useEffect(() => {
-    if (jobData) {
-      toast.success("Job created successfully!");
-      navigate("/recommendations", { state: { jobId: jobData.jobId } });
-    }
-  }, [jobData, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -125,7 +119,16 @@ function FormDescription() {
     };
 
     // Dispatch job creation action
-    dispatch(createJob(jobData));
+    dispatch(createJob(jobData)).then((action) => {
+      if (action.payload) {
+        if (action.payload.message === "Job created and ushers recommended") {
+          toast.success("Job created successfully!");
+          navigate("/recommendations", {
+            state: { jobId: action.payload.jobId },
+          });ذ
+        }
+      }
+    });
   };
 
   return (

@@ -40,16 +40,9 @@ function Recommendations() {
   useEffect(() => {
     if (jobId && !hasRequested) {
       dispatch(getRecommendedUshers(jobId));
-      setHasRequested(true);
+      // setHasRequested(true);
     }
   }, [jobId, dispatch, hasRequested]);
-
-  // Handle errors
-  useEffect(() => {
-    if (recommendedUshersError) {
-      toast.error(recommendedUshersError);
-    }
-  }, [recommendedUshersError]);
 
   const handleBack = () => {
     navigate(-1);
@@ -76,7 +69,6 @@ function Recommendations() {
       })
     );
 
-    // Navigate to confirmation page or back to profile
     navigate("/company-profile", { state: { jobCreated: true } });
   };
 
