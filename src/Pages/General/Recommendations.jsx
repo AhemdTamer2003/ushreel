@@ -33,10 +33,8 @@ function Recommendations() {
   const [selectedUshers, setSelectedUshers] = useState([]);
   const [hasRequested, setHasRequested] = useState(false);
 
-  // Get jobId from location state or job data
   const jobId = location.state?.jobId || jobData?.jobId;
 
-  // Fetch recommended ushers on component mount if jobId is available
   useEffect(() => {
     if (jobId && !hasRequested) {
       dispatch(getRecommendedUshers(jobId));

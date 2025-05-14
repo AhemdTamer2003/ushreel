@@ -14,8 +14,7 @@ function FormDescription() {
     (state) => state.job
   );
 
-  // Get the selected type (online, offline, both) from location state
-  const marketingType = location.state?.type || "offline"; // Default to offline if not provided
+  const marketingType = location.state?.type || "offline";
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,14 +40,11 @@ function FormDescription() {
     gender: "",
   });
 
-  // Handle API errors
   useEffect(() => {
     if (createJobError) {
       toast.error(createJobError);
     }
   }, [createJobError]);
-
-  // Handle job creation success
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,6 +52,30 @@ function FormDescription() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const formatTimeFor24Hour = (timeString) => {
+    if (!timeString) return "";
+
+    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeString)) {
+      return timeString;
+    }
+
+    try {
+      const [time, modifier] = timeString.split(" ");
+      let [hours, minutes] = time.split(":");
+
+      if (hours === "12") {
+        hours = modifier === "AM" ? "00" : "12";
+      } else if (modifier === "PM") {
+        hours = parseInt(hours, 10) + 12;
+      }
+
+      return `${hours.padStart(2, "0")}:${minutes}`;
+    } catch (error) {
+      console.error("Time format error:", error);
+      return timeString;
+    }
   };
 
   const handleCheckboxChange = (category, type) => {
@@ -83,7 +103,6 @@ function FormDescription() {
   };
 
   const handleNext = () => {
-    // Perform validation
     if (!formData.title) {
       toast.error("Please enter a job title");
       return;
@@ -105,27 +124,25 @@ function FormDescription() {
       return;
     }
 
-    // Prepare job data based on marketing type
     const jobData = {
-      title: formData.title,
       description: formData.description,
+      title: formData.title,
       startDate: formData.dateFrom,
       endDate: formData.dateTo,
-      startTime: formData.timeFrom,
-      endTime: formData.timeTo,
+      startTime: formatTimeFor24Hour(formData.timeFrom),
+      endTime: formatTimeFor24Hour(formData.timeTo),
       location: formData.location,
       numOfUshers: formData.totalUshers || 0,
-      preferred_gender: formData.gender || "both",
+      preferred_gender: formData.gender || "any",
     };
 
-    // Dispatch job creation action
     dispatch(createJob(jobData)).then((action) => {
       if (action.payload) {
         if (action.payload.message === "Job created and ushers recommended") {
           toast.success("Job created successfully!");
           navigate("/recommendations", {
             state: { jobId: action.payload.jobId },
-          });ذ
+          });
         }
       }
     });
@@ -189,7 +206,6 @@ function FormDescription() {
               </div>
 
               <div>
-                <h3 className="text-[#C2A04C] font-bold mb-4">Time</h3>
                 <div className="flex space-x-4">
                   <div className="flex-1">
                     <label className="text-gray-300 block mb-2">From</label>
@@ -245,8 +261,7 @@ function FormDescription() {
 
             {/* Right Column - Requirements */}
             <div className="space-y-6">
-              {/* Only show Ushers section if marketing type is offline or both */}
-              {(marketingType === "offline" || marketingType === "both") && (
+              {(marketingType === "offline" || marketingType === "any") && (
                 <div>
                   <h3 className="text-[#C2A04C] font-bold mb-4">Ushers</h3>
                   <input
@@ -280,8 +295,7 @@ function FormDescription() {
                 </div>
               )}
 
-              {/* Only show Content Creators section if marketing type is online or both */}
-              {(marketingType === "online" || marketingType === "both") && (
+              {(marketingType === "online" || marketingType === "any") && (
                 <div>
                   <h3 className="text-[#C2A04C] font-bold mb-4">
                     Content Creators
@@ -331,7 +345,7 @@ function FormDescription() {
                   <option value="">Select gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
-                  <option value="both">Both</option>
+                  <option value="any">Any</option>
                 </select>
               </div>
             </div>
