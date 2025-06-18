@@ -103,7 +103,7 @@ export const createContentJob = createAsyncThunk(
   "job/createContentJob",
   async (jobData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("/jobs/content", jobData);
+      const response = await apiClient.post("/jobs/content-creators", jobData);
       return response.data;
     } catch (error) {
       return rejectWithValue(

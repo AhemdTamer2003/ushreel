@@ -25,7 +25,6 @@ function CompanyProfile() {
   const dispatch = useDispatch();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Get company state from Redux
   const { profile, loading, error, updateStatus, updateError } = useSelector(
     (state) => state.company
   );
@@ -51,7 +50,6 @@ function CompanyProfile() {
     dispatch(fetchCompanyProfile());
   }, [isAuthenticated, dispatch, navigate]);
 
-  // Update local state when profile data is fetched
   useEffect(() => {
     if (profile) {
       setCompanyData({
@@ -81,7 +79,6 @@ function CompanyProfile() {
     }
   }, [profile]);
 
-  // Handle update status changes
   useEffect(() => {
     if (updateStatus === "succeeded") {
       toast.success("Profile updated successfully");
@@ -93,7 +90,6 @@ function CompanyProfile() {
     }
   }, [updateStatus, updateError, dispatch]);
 
-  // Handle errors
   useEffect(() => {
     if (error) {
       if (
@@ -133,7 +129,6 @@ function CompanyProfile() {
   };
 
   const handleSaveProfile = (updatedData) => {
-    // Filter only allowed fields before sending to API
     const updatedProfileData = {
       name: updatedData.name,
       phone: updatedData.phone,
@@ -147,24 +142,17 @@ function CompanyProfile() {
     navigate(`/job-details/${projectId}`);
   };
 
-  // Function to format the profile picture URL
   const getProfilePictureUrl = (path) => {
     if (!path) return "";
 
-    // If path is a full URL, return it
     if (path.startsWith("http")) return path;
 
-    // If path is a server-side file path (starts with C:\ or similar), convert to URL
     if (path.includes("\\uploads\\")) {
-      // Extract the part of the path after "uploads"
       const uploadPath = path.split("uploads")[1];
-      // Replace backslashes with forward slashes
       const formattedPath = uploadPath.replace(/\\/g, "/");
-      // Return the formatted URL
       return `${import.meta.env.VITE_BASEURL}/uploads${formattedPath}`;
     }
 
-    // If it's a relative path, just return it
     return path;
   };
 
@@ -294,10 +282,11 @@ function CompanyProfile() {
             className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
                          transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
           >
+            {" "}
             <h3 className="text-[#C2A04C] text-xl font-bold mb-4">
               Active Projects
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#C2A04C] scrollbar-track-gray-800">
               {companyData.activeProjects &&
               companyData.activeProjects.length > 0 ? (
                 companyData.activeProjects.map((project) => (
@@ -339,10 +328,11 @@ function CompanyProfile() {
             className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
                          transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
           >
+            {" "}
             <h3 className="text-[#C2A04C] text-xl font-bold mb-4">
               Completed Projects
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#C2A04C] scrollbar-track-gray-800">
               {companyData.completedProjects &&
               companyData.completedProjects.length > 0 ? (
                 companyData.completedProjects.map((project) => (

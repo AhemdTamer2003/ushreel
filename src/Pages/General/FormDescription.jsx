@@ -45,9 +45,34 @@ function FormDescription() {
       toast.error(createJobError);
     }
   }, [createJobError]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "dateFrom" || name === "dateTo") {
+      if (value && !validateDate(value)) {
+        toast.error("Please select a date between today and 2 years from now");
+        return;
+      }
+
+      if (name === "dateTo" && formData.dateFrom && value) {
+        const fromDate = new Date(formData.dateFrom);
+        const toDate = new Date(value);
+        if (toDate < fromDate) {
+          toast.error("End date cannot be earlier than start date");
+          return;
+        }
+      }
+
+      if (name === "dateFrom" && formData.dateTo && value) {
+        const fromDate = new Date(value);
+        const toDate = new Date(formData.dateTo);
+        if (fromDate > toDate) {
+          toast.error("Start date cannot be later than end date");
+          return;
+        }
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -87,6 +112,41 @@ function FormDescription() {
       return timeString;
     }
   };
+  const formatDateForBackend = (dateString) => {
+    if (!dateString) return "";
+
+    try {
+      const [year, month, day] = dateString.split("-");
+      return `${year}-${day}-${month}`;
+    } catch (error) {
+      console.error("Date format error:", error);
+      return dateString;
+    }
+  };
+
+  const validateDate = (dateString) => {
+    if (!dateString) return false;
+
+    const selectedDate = new Date(dateString);
+    const currentDate = new Date();
+    const maxDate = new Date();
+    maxDate.setFullYear(currentDate.getFullYear() + 2); // 2 years from now
+
+    currentDate.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    return selectedDate >= currentDate && selectedDate <= maxDate;
+  };
+
+  const getMinDate = () => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  const getMaxDate = () => {
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 2);
+    return maxDate.toISOString().split("T")[0];
+  };
 
   const handleCheckboxChange = (category, type) => {
     if (category === "ushers") {
@@ -125,16 +185,21 @@ function FormDescription() {
       toast.error("Please enter a description");
       return;
     }
-
     if (marketingType === "online") {
-      // Content creator job
       const requiredContentRoles = {};
       let hasValidRoles = false;
+
+      const roleMapping = {
+        reelMaker: "Reel Maker",
+        photographer: "Photography",
+        videoEditor: "Video Editor",
+      };
 
       Object.entries(formData.creatorRoleCounts).forEach(([role, count]) => {
         const numCount = parseInt(count);
         if (numCount > 0) {
-          requiredContentRoles[role] = numCount;
+          const backendRoleName = roleMapping[role] || role;
+          requiredContentRoles[backendRoleName] = numCount;
           hasValidRoles = true;
         }
       });
@@ -145,12 +210,11 @@ function FormDescription() {
         );
         return;
       }
-
       const contentJobData = {
         title: formData.title,
         description: formData.description,
-        startDate: formData.dateFrom,
-        endDate: formData.dateTo,
+        startDate: formatDateForBackend(formData.dateFrom),
+        endDate: formatDateForBackend(formData.dateTo),
         startTime: formatTimeFor24Hour(formData.timeFrom),
         endTime: formatTimeFor24Hour(formData.timeTo),
         location: formData.location,
@@ -171,7 +235,6 @@ function FormDescription() {
         }
       });
     } else {
-      // Usher job (offline)
       if (!formData.totalUshers) {
         toast.error("Please enter number of ushers needed");
         return;
@@ -180,12 +243,11 @@ function FormDescription() {
         toast.error("Please enter salary per usher");
         return;
       }
-
       const jobData = {
         description: formData.description,
         title: formData.title,
-        startDate: formData.dateFrom,
-        endDate: formData.dateTo,
+        startDate: formatDateForBackend(formData.dateFrom),
+        endDate: formatDateForBackend(formData.dateTo),
         startTime: formatTimeFor24Hour(formData.timeFrom),
         endTime: formatTimeFor24Hour(formData.timeTo),
         location: formData.location,
@@ -235,8 +297,7 @@ function FormDescription() {
                   placeholder="Enter job title"
                   className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
                 />
-              </div>
-
+              </div>{" "}
               <div>
                 <h3 className="text-[#C2A04C] font-bold mb-4">Date</h3>
                 <div className="flex space-x-4">
@@ -247,6 +308,8 @@ function FormDescription() {
                       name="dateFrom"
                       value={formData.dateFrom}
                       onChange={handleInputChange}
+                      min={getMinDate()}
+                      max={getMaxDate()}
                       className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
                     />
                   </div>
@@ -257,12 +320,13 @@ function FormDescription() {
                       name="dateTo"
                       value={formData.dateTo}
                       onChange={handleInputChange}
+                      min={formData.dateFrom || getMinDate()}
+                      max={getMaxDate()}
                       className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
                     />
                   </div>
                 </div>
               </div>
-
               <div>
                 <h3 className="text-[#C2A04C] font-bold mb-4">Time</h3>
                 <div className="flex space-x-4">
@@ -288,7 +352,6 @@ function FormDescription() {
                   </div>
                 </div>
               </div>
-
               <div>
                 <label className="text-[#C2A04C] font-bold block mb-2">
                   Location
@@ -302,7 +365,6 @@ function FormDescription() {
                   className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
                 />
               </div>
-
               <div>
                 <label className="text-[#C2A04C] font-bold block mb-2">
                   Description

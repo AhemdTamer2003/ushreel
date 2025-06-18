@@ -160,7 +160,6 @@ function ContentCreatorRecommendations() {
         >
           <FaArrowLeft className="mr-2" /> Back
         </button>
-
         <div className="bg-black/80 rounded-lg p-6 border border-[#C2A04C]/20 mb-8">
           <h2 className="text-[#C2A04C] font-bold text-2xl mb-4">
             Recommended Content Creators
@@ -178,38 +177,59 @@ function ContentCreatorRecommendations() {
               {selectedContentCreators.length} content creators
             </p>
           </div>
-        </div>
-
+        </div>{" "}
         {/* Group creators by field of work */}
         {recommendedContentCreators &&
-        Object.keys(recommendedContentCreators).length > 0 ? (
-          Object.entries(recommendedContentCreators).map(
-            ([fieldOfWork, creators]) => (
-              <div key={fieldOfWork} className="mb-8">
-                <h3 className="text-[#C2A04C] text-xl font-bold mb-4 capitalize">
-                  {fieldOfWork.replace(/([A-Z])/g, " $1").trim()}s
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {creators
-                    .filter((creator) =>
-                      creator.fullName
-                        .toLowerCase()
-                        .includes(searchCreator.toLowerCase())
-                    )
-                    .map((creator) => (
-                      <ProfileCard
-                        key={creator._id}
-                        id={creator._id}
-                        fullName={creator.fullName}
-                        fieldOfWork={creator.fieldOfWork}
-                        gender={creator.gender}
-                        profilePicture={creator.profilePicture}
-                      />
-                    ))}
+        (Array.isArray(recommendedContentCreators)
+          ? recommendedContentCreators.length > 0
+          : Object.keys(recommendedContentCreators).length > 0) ? (
+          (() => {
+            // Handle both new flat array structure and old grouped object structure
+            let groupedCreators = {};
+
+            if (Array.isArray(recommendedContentCreators)) {
+              // New structure: flat array, group by fieldOfWork
+              recommendedContentCreators.forEach((creator) => {
+                creator.fieldOfWork?.forEach((field) => {
+                  if (!groupedCreators[field]) {
+                    groupedCreators[field] = [];
+                  }
+                  groupedCreators[field].push(creator);
+                });
+              });
+            } else {
+              // Old structure: already grouped object
+              groupedCreators = recommendedContentCreators;
+            }
+
+            return Object.entries(groupedCreators).map(
+              ([fieldOfWork, creators]) => (
+                <div key={fieldOfWork} className="mb-8">
+                  <h3 className="text-[#C2A04C] text-xl font-bold mb-4 capitalize">
+                    {fieldOfWork.replace(/([A-Z])/g, " $1").trim()}s
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {creators
+                      .filter((creator) =>
+                        creator.fullName
+                          .toLowerCase()
+                          .includes(searchCreator.toLowerCase())
+                      )
+                      .map((creator) => (
+                        <ProfileCard
+                          key={creator._id || creator.id}
+                          id={creator._id || creator.id}
+                          fullName={creator.fullName}
+                          fieldOfWork={creator.fieldOfWork}
+                          gender={creator.gender}
+                          profilePicture={creator.profilePicture}
+                        />
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )
-          )
+              )
+            );
+          })()
         ) : (
           <div className="text-center py-10">
             <p className="text-gray-300">
@@ -217,7 +237,6 @@ function ContentCreatorRecommendations() {
             </p>
           </div>
         )}
-
         <div className="mt-8 flex justify-center">
           <button
             onClick={handleNext}
