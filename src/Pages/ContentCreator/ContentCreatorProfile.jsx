@@ -1,291 +1,488 @@
-import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaUser,
-  FaCamera,
-  FaInstagram,
-  FaFacebook,
-  FaGlobe,
-} from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchContentCreatorProfile } from "../../redux/Services/contentCreator";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaPhone, FaEdit, FaUser, FaBriefcase } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+} from "@mui/material";
+import {
+  fetchContentCreatorProfile,
+  updateContentCreatorProfile,
+  uploadContentCreatorProfilePicture,
+  acceptContentOffer,
+  declineContentOffer,
+} from "../../redux/Services/contentCreator";
+import {
+  clearErrors,
+  resetUpdateStatus,
+} from "../../redux/Slices/contentCreatorSlice";
 import Navbar from "../../components/Shared/Navbar";
 
 function ContentCreatorProfile() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { profile, loading, error } = useSelector(
+  const { profile, loading, error, updateStatus, updateError } = useSelector(
     (state) => state.contentCreator
   );
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    email: "",
+    gender: "",
+    fieldOfWork: "",
+    portfolioLinks: [],
+  });
+
+  const hasRequestedProfile = useRef(false);
+
+  // Authentication check and profile fetch - runs only once
   useEffect(() => {
-    dispatch(fetchContentCreatorProfile())
-      .unwrap()
-      .catch((error) => {
-        toast.error(error || "Failed to fetch profile");
-      });
-  }, [dispatch]);
+    if (!isAuthenticated) {
+      toast.error("Please log in to view your profile");
+      navigate("/login");
+      return;
+    }
 
+    // Only fetch if we haven't requested yet
+    if (!hasRequestedProfile.current) {
+      console.log("Fetching content creator profile...");
+      hasRequestedProfile.current = true;
+      dispatch(fetchContentCreatorProfile());
+    }
+  }, [isAuthenticated, dispatch, navigate]);
+
+  // Update form data when profile loads - runs only when profile changes
+  useEffect(() => {
+    if (profile) {
+      setEditFormData({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        phone: profile.phone || "",
+        email: profile.email || "",
+        gender: profile.gender || "",
+        fieldOfWork: profile.fieldOfWork || "",
+        portfolioLinks: profile.portfolioLinks || [],
+      });
+    }
+  }, [profile]);
+
+  // Handle update status changes
+  useEffect(() => {
+    if (updateStatus === "succeeded") {
+      toast.success("Profile updated successfully");
+      setIsEditingProfile(false);
+      dispatch(resetUpdateStatus());
+    } else if (updateStatus === "failed" && updateError) {
+      toast.error(updateError);
+      dispatch(clearErrors());
+    }
+  }, [updateStatus, updateError, dispatch]);
+
+  // Handle errors
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      if (error.includes("401")) {
+        toast.error("Session expired. Please log in again");
+        navigate("/login");
+      } else {
+        toast.error(error);
+      }
+      dispatch(clearErrors());
     }
-  }, [error]);
+  }, [error, navigate, dispatch]);
 
-  const handleEditClick = () => {
-    navigate("/content-creator-edit", { state: { profileData: profile } });
+  // Reset the request flag when component unmounts
+  useEffect(() => {
+    return () => {
+      hasRequestedProfile.current = false;
+    };
+  }, []);
+
+  const handleProfileUpdate = () => {
+    dispatch(updateContentCreatorProfile(editFormData));
   };
 
-  const handleAcceptOffer = () => {
-    toast.info("Offer acceptance will be implemented");
+  const handleProfilePictureUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      dispatch(uploadContentCreatorProfilePicture(file));
+    }
   };
 
-  const handleDeclineOffer = () => {
-    toast.info("Offer decline will be implemented");
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAcceptOffer = (offerId) => {
+    dispatch(acceptContentOffer(offerId))
+      .unwrap()
+      .then(() => {
+        toast.success("Offer accepted successfully!");
+        // Refresh profile to get updated job lists
+        dispatch(fetchContentCreatorProfile());
+      })
+      .catch((error) => {
+        toast.error(error || "Failed to accept offer");
+      });
+  };
+
+  const handleDeclineOffer = (offerId) => {
+    dispatch(declineContentOffer(offerId))
+      .unwrap()
+      .then(() => {
+        toast.success("Offer declined successfully!");
+        // Refresh profile to get updated job lists
+        dispatch(fetchContentCreatorProfile());
+      })
+      .catch((error) => {
+        toast.error(error || "Failed to decline offer");
+      });
+  };
+
+  // Function to format the profile picture URL
+  const getProfilePictureUrl = (path) => {
+    if (!path) return "/default-profile.jpg";
+
+    // If path is a full URL, return it
+    if (path.startsWith("http")) return path;
+
+    // If path is a server-side file path (starts with C:\ or similar), convert to URL
+    if (path.includes("\\uploads\\")) {
+      // Extract the part of the path after "uploads"
+      const uploadPath = path.split("uploads")[1];
+      // Replace backslashes with forward slashes
+      const formattedPath = uploadPath.replace(/\\/g, "/");
+      // Return the formatted URL
+      return `${import.meta.env.VITE_BASEURL}/uploads${formattedPath}`;
+    }
+
+    // If it's a relative path, just return it
+    return path;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C] flex items-center justify-center">
-        <div className="text-[#C2A04C] text-xl">Loading profile...</div>
-      </div>
-    );
-  }
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C] flex items-center justify-center">
-        <div className="text-[#C2A04C] text-xl">No profile data available</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-[#C2A04C]">
+        <CircularProgress sx={{ color: "#D4A537" }} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      <Navbar />
+      {/* Use shared Navbar component with forced auth */}
+      <Navbar forceAuth={true} />
 
-      <div className="container mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Profile Card */}
-        <div
-          className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                      transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
-        >
-          <div className="flex flex-col items-center">
-            <img
-              src={profile.profileImage}
-              alt="Profile"
-              className="w-32 h-32 rounded-full mb-4 border-4 border-[#C2A04C]
-                       transform transition-all duration-300 hover:scale-105"
-            />
-            <h2 className="text-[#C2A04C] text-2xl font-bold mb-2">
-              {profile.name}
-            </h2>
-            <p className="text-gray-400 text-sm mb-4">#{profile.id}</p>
-
-            <div className="w-full space-y-3">
-              <div className="flex items-center text-gray-300 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaEnvelope className="text-[#C2A04C] mr-2" />
-                <span>{profile.email}</span>
-              </div>
-              <div className="flex items-center text-gray-300 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaPhone className="text-[#C2A04C] mr-2" />
-                <span>{profile.phone}</span>
-              </div>
-              <div className="flex items-center text-gray-300 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaMapMarkerAlt className="text-[#C2A04C] mr-2" />
-                <span>{profile.location}</span>
-              </div>
-              <div className="flex items-center text-gray-300 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaUser className="text-[#C2A04C] mr-2" />
-                <span>{profile.gender}</span>
-              </div>
-              <div className="flex items-center text-gray-300 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaCamera className="text-[#C2A04C] mr-2" />
-                <span>{profile.specialty}</span>
-              </div>
+      {/* Main Content */}
+      <div className="container mx-auto p-8">
+        <div className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20">
+          {/* Profile Header */}
+          <div className="flex items-center space-x-8 mb-8">
+            <div className="relative">
+              <img
+                src={getProfilePictureUrl(profile?.profilePicture)}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border-4 border-[#C2A04C]"
+              />
+              <label className="absolute bottom-2 right-2 cursor-pointer bg-[#C2A04C] rounded-full p-2">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfilePictureUpload}
+                />
+                <FaEdit className="text-black" />
+              </label>
             </div>
-
-            <button
-              onClick={handleEditClick}
-              className="mt-6 bg-[#C2A04C] text-black px-6 py-2 rounded-full 
-                       hover:bg-[#C2A04C]/80 transition-all duration-300
-                       transform hover:scale-105 hover:shadow-lg"
+            <div className="flex-1">
+              <h1 className="text-[#C2A04C] text-3xl font-bold">
+                {profile?.firstName} {profile?.lastName}
+              </h1>
+              <p className="text-gray-400 mt-1">{profile?.email}</p>
+            </div>
+            <Button
+              onClick={() => setIsEditingProfile(true)}
+              variant="contained"
+              sx={{
+                backgroundColor: "#C2A04C",
+                "&:hover": { backgroundColor: "#9c7c3c" },
+              }}
             >
               Edit Profile
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Photos Section */}
-          <div
-            className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
-          >
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Photos</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {profile.photos?.map((photo, index) => (
-                <img
-                  key={index}
-                  src={photo}
-                  alt={`Portfolio ${index + 1}`}
-                  className="w-full h-40 object-cover rounded-lg border border-[#C2A04C]/20
-                           transform transition-all duration-300 hover:scale-105 hover:border-[#C2A04C]"
-                />
-              ))}
-            </div>
+            </Button>
           </div>
 
-          {/* Offers Section */}
-          <div
-            className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
-          >
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">Offers</h3>
+          {/* Profile Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              {profile.offers?.map((offer) => (
-                <div
-                  key={offer.id}
-                  className="bg-[#C2A04C] p-4 rounded-lg
-                              transform transition-all duration-300 hover:scale-[1.02]"
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <p className="text-black font-semibold">{offer.company}</p>
-                    {offer.status && (
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          offer.status === "accepted"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
+              <div className="flex items-center space-x-3">
+                <FaPhone className="text-[#C2A04C]" />
+                <span className="text-white">
+                  {profile?.phone || "No phone number"}
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <FaUser className="text-[#C2A04C]" />
+                <span className="text-white capitalize">
+                  {profile?.gender || "Not specified"}
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <FaBriefcase className="text-[#C2A04C]" />
+                <span className="text-white">
+                  {profile?.fieldOfWork || "Not specified"}
+                </span>
+              </div>
+
+              {/* Portfolio Links */}
+              {profile?.portfolioLinks && profile.portfolioLinks.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                    Portfolio Links
+                  </h3>
+                  <div className="space-y-2">
+                    {profile.portfolioLinks.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-blue-400 hover:text-blue-300 break-all"
                       >
-                        {offer.status.charAt(0).toUpperCase() +
-                          offer.status.slice(1)}
-                      </span>
-                    )}
+                        🔗 {link}
+                      </a>
+                    ))}
                   </div>
-                  <p className="text-black mb-3">{offer.message}</p>
-                  {!offer.status && (
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        onClick={() => handleDeclineOffer()}
-                        className="bg-black text-red-500 px-4 py-2 rounded-full
-                                 hover:bg-black/80 transition-all duration-300
-                                 transform hover:scale-105"
+                </div>
+              )}
+
+              {/* Available Job Offers */}
+              <div className="mt-8">
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                  Available Job Offers ({profile?.availableOffers?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {profile?.availableOffers?.length > 0 ? (
+                    profile.availableOffers.map((offer, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/30 p-4 rounded border border-[#C2A04C]/30"
                       >
-                        Decline
-                      </button>
-                      <button
-                        onClick={() => handleAcceptOffer()}
-                        className="bg-black text-green-500 px-4 py-2 rounded-full
-                                 hover:bg-black/80 transition-all duration-300
-                                 transform hover:scale-105"
-                      >
-                        Accept
-                      </button>
-                    </div>
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-white font-semibold">
+                            {offer.jobTitle}
+                          </h4>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          {offer.companyName}
+                        </p>
+                        <p className="text-gray-400 text-sm mb-2">
+                          📍 {offer.location}
+                        </p>
+                        <p className="text-gray-400 text-sm mb-3">
+                          📅 {new Date(offer.startDate).toLocaleDateString()} -{" "}
+                          {new Date(offer.endDate).toLocaleDateString()}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleAcceptOffer(offer.offerId)}
+                            variant="contained"
+                            size="small"
+                            sx={{
+                              backgroundColor: "#4CAF50",
+                              "&:hover": { backgroundColor: "#45a049" },
+                            }}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            onClick={() => handleDeclineOffer(offer.offerId)}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              color: "#f44336",
+                              borderColor: "#f44336",
+                              "&:hover": {
+                                borderColor: "#d32f2f",
+                                color: "#d32f2f",
+                              },
+                            }}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No job offers available</p>
                   )}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
 
-          {/* Experiences Section */}
-          <div
-            className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
-          >
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">
-              Experiences
-            </h3>
-            <div className="space-y-4">
-              {profile.experiences?.map((exp) => (
-                <div
-                  key={exp.id}
-                  className="text-gray-300 p-3 rounded-lg hover:bg-black/40
-                              transform transition-all duration-300"
-                >
-                  <p>
-                    {exp.id} - {exp.description}
-                  </p>
+            <div className="space-y-6">
+              {/* Upcoming Jobs */}
+              <div>
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                  Upcoming Jobs ({profile?.upcomingJobs?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {profile?.upcomingJobs?.length > 0 ? (
+                    profile.upcomingJobs.map((job, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/30 p-4 rounded border border-green-500/30"
+                      >
+                        <h4 className="text-white font-semibold mb-2">
+                          {job.title}
+                        </h4>
+                        <p className="text-gray-400 text-sm mb-2">
+                          📍 {job.location}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          📅 {new Date(job.startDate).toLocaleDateString()} -{" "}
+                          {new Date(job.endDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          🕐 {job.startTime} - {job.endTime}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No upcoming jobs</p>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Platform Links Section */}
-          <div
-            className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
-          >
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">
-              Platform Links
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaInstagram className="text-[#C2A04C] text-xl" />
-                <a
-                  href={profile.portfolioLinks?.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300"
-                >
-                  {profile.portfolioLinks?.instagram}
-                </a>
-              </div>
-              <div className="flex items-center space-x-4 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaFacebook className="text-[#C2A04C] text-xl" />
-                <a
-                  href={profile.portfolioLinks?.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300"
-                >
-                  {profile.portfolioLinks?.facebook}
-                </a>
-              </div>
-              <div className="flex items-center space-x-4 hover:text-[#C2A04C] transition-colors duration-300">
-                <FaGlobe className="text-[#C2A04C] text-xl" />
-                <a
-                  href={profile.portfolioLinks?.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-300"
-                >
-                  {profile.portfolioLinks?.website}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Companies Opinions Section */}
-          <div
-            className="bg-black/80 rounded-lg p-6 shadow-lg border border-[#C2A04C]/20
-                         transform transition-all duration-300 hover:shadow-[0_0_15px_rgba(194,160,76,0.3)]"
-          >
-            <h3 className="text-[#C2A04C] text-xl font-bold mb-4">
-              Companies opinions
-            </h3>
-            <div className="space-y-4">
-              {profile.companyOpinions?.map((opinion, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center text-gray-300 p-3 rounded-lg
-                              hover:bg-black/40 transition-all duration-300"
-                >
-                  <span>{opinion.company}</span>
-                  <span>{opinion.rating}</span>
+              {/* Past Jobs */}
+              <div>
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                  Past Jobs ({profile?.pastJobs?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {profile?.pastJobs?.length > 0 ? (
+                    profile.pastJobs.map((job, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/30 p-4 rounded border border-gray-500/30"
+                      >
+                        <h4 className="text-gray-300 font-semibold mb-2">
+                          {job.title}
+                        </h4>
+                        <p className="text-gray-400 text-sm mb-2">
+                          📍 {job.location}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          📅 {new Date(job.startDate).toLocaleDateString()} -{" "}
+                          {new Date(job.endDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          🕐 {job.startTime} - {job.endTime}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No past jobs</p>
+                  )}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog
+        open={isEditingProfile}
+        onClose={() => setIsEditingProfile(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Profile</DialogTitle>
+        <DialogContent>
+          <div className="gap-4 flex flex-col mt-4">
+            <TextField
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={editFormData.firstName}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={editFormData.lastName}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Phone"
+              name="phone"
+              value={editFormData.phone}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              name="email"
+              value={editFormData.email}
+              onChange={handleInputChange}
+              variant="outlined"
+              disabled
+            />
+            <TextField
+              fullWidth
+              label="Gender"
+              name="gender"
+              value={editFormData.gender}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              label="Field of Work"
+              name="fieldOfWork"
+              value={editFormData.fieldOfWork}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditingProfile(false)}>Cancel</Button>
+          <Button
+            onClick={handleProfileUpdate}
+            variant="contained"
+            sx={{
+              backgroundColor: "#C2A04C",
+              "&:hover": { backgroundColor: "#9c7c3c" },
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

@@ -2,7 +2,9 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   fetchContentCreatorProfile,
   updateContentCreatorProfile,
-  uploadProfilePicture,
+  uploadContentCreatorProfilePicture,
+  acceptContentOffer,
+  declineContentOffer,
 } from "../Services/contentCreator";
 
 const initialState = {
@@ -11,6 +13,7 @@ const initialState = {
   error: null,
   updateStatus: "idle",
   updateError: null,
+  lastFetched: null,
 };
 
 const contentCreatorSlice = createSlice({
@@ -23,7 +26,9 @@ const contentCreatorSlice = createSlice({
     },
     resetUpdateStatus: (state) => {
       state.updateStatus = "idle";
-      state.updateError = null;
+    },
+    setLastFetched: (state, action) => {
+      state.lastFetched = action.payload || Date.now();
     },
   },
   extraReducers: (builder) => {
@@ -36,11 +41,11 @@ const contentCreatorSlice = createSlice({
       .addCase(fetchContentCreatorProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.profile = action.payload.profile;
-        state.error = null;
+        state.lastFetched = Date.now();
       })
       .addCase(fetchContentCreatorProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch profile";
+        state.error = action.payload;
       });
 
     // Update Profile
@@ -52,7 +57,6 @@ const contentCreatorSlice = createSlice({
       .addCase(updateContentCreatorProfile.fulfilled, (state, action) => {
         state.updateStatus = "succeeded";
         state.profile = action.payload.profile;
-        state.updateError = null;
       })
       .addCase(updateContentCreatorProfile.rejected, (state, action) => {
         state.updateStatus = "failed";
@@ -61,30 +65,63 @@ const contentCreatorSlice = createSlice({
 
     // Upload Profile Picture
     builder
-      .addCase(uploadProfilePicture.pending, (state) => {
+      .addCase(uploadContentCreatorProfilePicture.pending, (state) => {
         state.updateStatus = "loading";
         state.updateError = null;
       })
-      .addCase(uploadProfilePicture.fulfilled, (state, action) => {
-        state.updateStatus = "succeeded";
-        if (action.payload.profile) {
-          state.profile = action.payload.profile;
-        } else if (action.payload.profilePicture) {
-          state.profile = {
-            ...state.profile,
-            profilePicture: action.payload.profilePicture,
-          };
+      .addCase(
+        uploadContentCreatorProfilePicture.fulfilled,
+        (state, action) => {
+          state.updateStatus = "succeeded";
+          if (action.payload.profile) {
+            state.profile = action.payload.profile;
+          } else if (action.payload.profilePicture) {
+            state.profile = {
+              ...state.profile,
+              profilePicture: action.payload.profilePicture,
+            };
+          }
         }
+      )
+      .addCase(uploadContentCreatorProfilePicture.rejected, (state, action) => {
+        state.updateStatus = "failed";
+        state.updateError = action.payload;
+      });
+
+    // Accept Offer
+    builder
+      .addCase(acceptContentOffer.pending, (state) => {
+        state.updateStatus = "loading";
         state.updateError = null;
       })
-      .addCase(uploadProfilePicture.rejected, (state, action) => {
+      .addCase(acceptContentOffer.fulfilled, (state) => {
+        state.updateStatus = "succeeded";
+        // Refresh the profile to get updated job lists
+        state.lastFetched = null;
+      })
+      .addCase(acceptContentOffer.rejected, (state, action) => {
+        state.updateStatus = "failed";
+        state.updateError = action.payload;
+      });
+
+    // Decline Offer
+    builder
+      .addCase(declineContentOffer.pending, (state) => {
+        state.updateStatus = "loading";
+        state.updateError = null;
+      })
+      .addCase(declineContentOffer.fulfilled, (state) => {
+        state.updateStatus = "succeeded";
+        // Refresh the profile to get updated job lists
+        state.lastFetched = null;
+      })
+      .addCase(declineContentOffer.rejected, (state, action) => {
         state.updateStatus = "failed";
         state.updateError = action.payload;
       });
   },
 });
 
-export const { clearErrors, resetUpdateStatus } = contentCreatorSlice.actions;
-
-
+export const { clearErrors, resetUpdateStatus, setLastFetched } =
+  contentCreatorSlice.actions;
 export default contentCreatorSlice.reducer;

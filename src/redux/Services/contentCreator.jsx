@@ -9,9 +9,6 @@ export const fetchContentCreatorProfile = createAsyncThunk(
       const response = await apiClient.get("/content-creator/profile");
       return response.data;
     } catch (error) {
-      if (!error.response) {
-        throw error;
-      }
       return rejectWithValue(
         error.response?.data?.message ||
           error.message ||
@@ -32,6 +29,17 @@ export const updateContentCreatorProfile = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
+      // Handle validation errors from backend
+      if (
+        error.response?.data?.errors &&
+        Array.isArray(error.response.data.errors)
+      ) {
+        const errorMessages = error.response.data.errors
+          .map((err) => err.msg)
+          .join(", ");
+        return rejectWithValue(errorMessages);
+      }
+
       return rejectWithValue(
         error.response?.data?.message ||
           error.message ||
@@ -42,7 +50,7 @@ export const updateContentCreatorProfile = createAsyncThunk(
 );
 
 // Upload profile picture
-export const uploadProfilePicture = createAsyncThunk(
+export const uploadContentCreatorProfilePicture = createAsyncThunk(
   "contentCreator/uploadProfilePicture",
   async (pictureFile, { rejectWithValue }) => {
     try {
@@ -64,6 +72,44 @@ export const uploadProfilePicture = createAsyncThunk(
         error.response?.data?.message ||
           error.message ||
           "Failed to upload profile picture"
+      );
+    }
+  }
+);
+
+// Accept job offer
+export const acceptContentOffer = createAsyncThunk(
+  "contentCreator/acceptOffer",
+  async (offerId, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.patch(
+        `/content-creator/offer/${offerId}/accept`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to accept offer"
+      );
+    }
+  }
+);
+
+// Decline job offer
+export const declineContentOffer = createAsyncThunk(
+  "contentCreator/declineOffer",
+  async (offerId, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.patch(
+        `/content-creator/offer/${offerId}/decline`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to decline offer"
       );
     }
   }

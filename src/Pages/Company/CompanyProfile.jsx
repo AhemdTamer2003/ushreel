@@ -31,7 +31,6 @@ function CompanyProfile() {
   );
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  // Local state for data
   const [companyData, setCompanyData] = useState({
     name: "",
     email: "",
@@ -43,7 +42,6 @@ function CompanyProfile() {
     completedProjects: [],
   });
 
-  // Fetch company profile on component mount
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error("Please log in to view your profile");
@@ -146,7 +144,7 @@ function CompanyProfile() {
   };
 
   const handleViewProject = (projectId) => {
-    console.log("Viewing project:", projectId);
+    navigate(`/job-details/${projectId}`);
   };
 
   // Function to format the profile picture URL
@@ -289,20 +287,6 @@ function CompanyProfile() {
                 <p className="text-gray-300">Offline Marketing</p>
               </div>
             </div>
-
-            <div
-              onClick={() => handleMarketingPreferenceSelect("both")}
-              className={`cursor-pointer p-6 rounded-lg border-2 
-                        ${
-                          companyData.marketingPreference === "both"
-                            ? "border-[#C2A04C] bg-[#C2A04C]/20"
-                            : "border-gray-600 hover:border-[#C2A04C]/50"
-                        }
-                        transition-all duration-300 transform hover:scale-105`}
-            >
-              <h4 className="text-[#C2A04C] text-lg font-bold mb-2">Both</h4>
-              <p className="text-gray-300">Online & Offline Marketing</p>
-            </div>
           </div>
 
           {/* Active Projects Section */}
@@ -320,8 +304,7 @@ function CompanyProfile() {
                   <div
                     key={project.id}
                     className="bg-black/40 p-4 rounded-lg border border-[#C2A04C]/20
-                                transform transition-all duration-300 hover:border-[#C2A04C] hover:scale-[1.02]"
-                    onClick={() => handleViewProject(project.id)}
+                                transform transition-all duration-300 hover:border-[#C2A04C]"
                   >
                     <div className="flex justify-between items-center">
                       <h4 className="text-[#C2A04C] font-bold">
@@ -332,6 +315,16 @@ function CompanyProfile() {
                     <div className="flex justify-between items-center mt-2 text-gray-300">
                       <span>Type: {project.type}</span>
                       <span>Participants: {project.participants}</span>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => handleViewProject(project.id)}
+                        className="bg-[#C2A04C] text-black px-4 py-2 rounded-full text-sm font-medium
+                                   hover:bg-[#C2A04C]/80 transition-all duration-300
+                                   transform hover:scale-105"
+                      >
+                        View Details
+                      </button>
                     </div>
                   </div>
                 ))
@@ -356,8 +349,7 @@ function CompanyProfile() {
                   <div
                     key={project.id}
                     className="bg-black/40 p-4 rounded-lg border border-[#C2A04C]/20
-                                transform transition-all duration-300 hover:border-[#C2A04C] hover:scale-[1.02]"
-                    onClick={() => handleViewProject(project.id)}
+                                transform transition-all duration-300 hover:border-[#C2A04C]"
                   >
                     <div className="flex justify-between items-center">
                       <h4 className="text-[#C2A04C] font-bold">
@@ -368,6 +360,16 @@ function CompanyProfile() {
                     <div className="flex justify-between items-center mt-2 text-gray-300">
                       <span>Type: {project.type}</span>
                       <span>{project.rating}</span>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => handleViewProject(project.id)}
+                        className="bg-[#C2A04C] text-black px-4 py-2 rounded-full text-sm font-medium
+                                   hover:bg-[#C2A04C]/80 transition-all duration-300
+                                   transform hover:scale-105"
+                      >
+                        View Details
+                      </button>
                     </div>
                   </div>
                 ))

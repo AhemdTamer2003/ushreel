@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { createJob } from "../../redux/Services/job";
+import { createJob, createContentJob } from "../../redux/Services/job";
 import { toast } from "react-toastify";
 import Navbar from "../../components/Shared/Navbar";
 
@@ -25,17 +25,17 @@ function FormDescription() {
     location: "",
     description: "",
     totalUshers: "",
-    totalContentCreators: "",
+    salaryPerUsher: "",
     selectedUsherTypes: {
       sales: false,
       activation: false,
       registration: false,
       crowdManagement: false,
     },
-    selectedCreatorTypes: {
-      reelMaker: false,
-      photographer: false,
-      videoEditor: false,
+    creatorRoleCounts: {
+      reelMaker: "",
+      photographer: "",
+      videoEditor: "",
     },
     gender: "",
   });
@@ -51,6 +51,16 @@ function FormDescription() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleCreatorRoleCountChange = (role, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      creatorRoleCounts: {
+        ...prev.creatorRoleCounts,
+        [role]: value,
+      },
     }));
   };
 
@@ -87,14 +97,6 @@ function FormDescription() {
           [type]: !prev.selectedUsherTypes[type],
         },
       }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        selectedCreatorTypes: {
-          ...prev.selectedCreatorTypes,
-          [type]: !prev.selectedCreatorTypes[type],
-        },
-      }));
     }
   };
 
@@ -124,33 +126,89 @@ function FormDescription() {
       return;
     }
 
-    const jobData = {
-      description: formData.description,
-      title: formData.title,
-      startDate: formData.dateFrom,
-      endDate: formData.dateTo,
-      startTime: formatTimeFor24Hour(formData.timeFrom),
-      endTime: formatTimeFor24Hour(formData.timeTo),
-      location: formData.location,
-      numOfUshers: formData.totalUshers || 0,
-      preferred_gender: formData.gender || "any",
-    };
+    if (marketingType === "online") {
+      // Content creator job
+      const requiredContentRoles = {};
+      let hasValidRoles = false;
 
-    dispatch(createJob(jobData)).then((action) => {
-      if (action.payload) {
-        if (action.payload.message === "Job created and ushers recommended") {
-          toast.success("Job created successfully!");
-          navigate("/recommendations", {
-            state: { jobId: action.payload.jobId },
-          });
+      Object.entries(formData.creatorRoleCounts).forEach(([role, count]) => {
+        const numCount = parseInt(count);
+        if (numCount > 0) {
+          requiredContentRoles[role] = numCount;
+          hasValidRoles = true;
         }
+      });
+
+      if (!hasValidRoles) {
+        toast.error(
+          "Please specify at least one content creator role with count"
+        );
+        return;
       }
-    });
+
+      const contentJobData = {
+        title: formData.title,
+        description: formData.description,
+        startDate: formData.dateFrom,
+        endDate: formData.dateTo,
+        startTime: formatTimeFor24Hour(formData.timeFrom),
+        endTime: formatTimeFor24Hour(formData.timeTo),
+        location: formData.location,
+        requiredContentRoles,
+      };
+
+      dispatch(createContentJob(contentJobData)).then((action) => {
+        if (action.payload) {
+          if (action.payload.message === "Content job created successfully") {
+            toast.success("Content job created successfully!");
+            navigate("/content-creator-recommendations", {
+              state: {
+                jobId: action.payload.jobId,
+                recommendations: action.payload.recommendedContentCreators,
+              },
+            });
+          }
+        }
+      });
+    } else {
+      // Usher job (offline)
+      if (!formData.totalUshers) {
+        toast.error("Please enter number of ushers needed");
+        return;
+      }
+      if (!formData.salaryPerUsher) {
+        toast.error("Please enter salary per usher");
+        return;
+      }
+
+      const jobData = {
+        description: formData.description,
+        title: formData.title,
+        startDate: formData.dateFrom,
+        endDate: formData.dateTo,
+        startTime: formatTimeFor24Hour(formData.timeFrom),
+        endTime: formatTimeFor24Hour(formData.timeTo),
+        location: formData.location,
+        numOfUshers: parseInt(formData.totalUshers),
+        salaryPerUsher: parseFloat(formData.salaryPerUsher),
+        preferred_gender: formData.gender || "any",
+      };
+
+      dispatch(createJob(jobData)).then((action) => {
+        if (action.payload) {
+          if (action.payload.message === "Job created and ushers recommended") {
+            toast.success("Job created successfully!");
+            navigate("/recommendations", {
+              state: { jobId: action.payload.jobId },
+            });
+          }
+        }
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
-      {/* Use the shared Navbar component */}
       <Navbar forceAuth={true} />
 
       <div className="container mx-auto p-8">
@@ -206,6 +264,7 @@ function FormDescription() {
               </div>
 
               <div>
+                <h3 className="text-[#C2A04C] font-bold mb-4">Time</h3>
                 <div className="flex space-x-4">
                   <div className="flex-1">
                     <label className="text-gray-300 block mb-2">From</label>
@@ -261,7 +320,7 @@ function FormDescription() {
 
             {/* Right Column - Requirements */}
             <div className="space-y-6">
-              {(marketingType === "offline" || marketingType === "any") && (
+              {marketingType === "offline" && (
                 <div>
                   <h3 className="text-[#C2A04C] font-bold mb-4">Ushers</h3>
                   <input
@@ -272,6 +331,17 @@ function FormDescription() {
                     placeholder="Number of total ushers"
                     className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
                   />
+
+                  <input
+                    type="number"
+                    name="salaryPerUsher"
+                    value={formData.salaryPerUsher}
+                    onChange={handleInputChange}
+                    placeholder="Salary per usher"
+                    step="0.01"
+                    className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
+                  />
+
                   <div className="grid grid-cols-2 gap-4">
                     {Object.entries(formData.selectedUsherTypes).map(
                       ([type, checked]) => (
@@ -292,62 +362,58 @@ function FormDescription() {
                       )
                     )}
                   </div>
+
+                  {/* Gender Selection - only for ushers */}
+                  <div className="mt-4">
+                    <label className="text-[#C2A04C] font-bold block mb-2">
+                      Preferred Gender
+                    </label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
+                    >
+                      <option value="">Select gender preference</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="any">Any</option>
+                    </select>
+                  </div>
                 </div>
               )}
 
-              {(marketingType === "online" || marketingType === "any") && (
+              {marketingType === "online" && (
                 <div>
                   <h3 className="text-[#C2A04C] font-bold mb-4">
                     Content Creators
                   </h3>
-                  <input
-                    type="number"
-                    name="totalContentCreators"
-                    value={formData.totalContentCreators}
-                    onChange={handleInputChange}
-                    placeholder="Number of total content creators"
-                    className="w-full bg-gray-200 p-2 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(formData.selectedCreatorTypes).map(
-                      ([type, checked]) => (
-                        <label
-                          key={type}
-                          className="flex items-center space-x-2 text-gray-300"
-                        >
+                  <div className="space-y-4">
+                    {Object.entries(formData.creatorRoleCounts).map(
+                      ([role, count]) => (
+                        <div key={role}>
+                          <label className="text-gray-300 block mb-2 capitalize">
+                            {role.replace(/([A-Z])/g, " $1").trim()}
+                          </label>
                           <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              handleCheckboxChange("creators", type)
+                            type="number"
+                            value={count}
+                            onChange={(e) =>
+                              handleCreatorRoleCountChange(role, e.target.value)
                             }
-                            className="form-checkbox text-[#C2A04C] rounded"
+                            placeholder={`Number of ${role
+                              .replace(/([A-Z])/g, " $1")
+                              .trim()
+                              .toLowerCase()}s`}
+                            min="0"
+                            className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
                           />
-                          <span>{type.replace(/([A-Z])/g, " $1").trim()}</span>
-                        </label>
+                        </div>
                       )
                     )}
                   </div>
                 </div>
               )}
-
-              {/* Gender Selection */}
-              <div>
-                <label className="text-[#C2A04C] font-bold block mb-2">
-                  Gender
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-200 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A04C]"
-                >
-                  <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="any">Any</option>
-                </select>
-              </div>
             </div>
           </div>
 

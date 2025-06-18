@@ -347,10 +347,9 @@ export default function Navbar({ forceAuth }) {
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector(selectAuth);
 
-  // State to store fetched user profile
   const [userProfile, setUserProfile] = useState(null);
+  const [hasRequestedProfile, setHasRequestedProfile] = useState(false);
 
-  // Safe JSON parse function
   const safeJSONParse = (data) => {
     if (!data) return null;
     try {
@@ -361,7 +360,6 @@ export default function Navbar({ forceAuth }) {
     }
   };
 
-  // Load user from localStorage and fetch profile if needed
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -369,13 +367,9 @@ export default function Navbar({ forceAuth }) {
         const storedUserData = localStorage.getItem("user");
 
         if (!token) {
-          console.log("No token found, skipping profile fetch");
           return;
         }
 
-        console.log("Token found, attempting to fetch profile");
-
-        // Parse stored user data
         let storedUser = null;
         let role = null;
 
@@ -383,31 +377,23 @@ export default function Navbar({ forceAuth }) {
           try {
             storedUser = safeJSONParse(storedUserData);
             role = storedUser?.role;
-            console.log("Found stored user with role:", role);
           } catch (e) {
             console.error("Error parsing stored user:", e);
           }
         }
 
-        // Use Redux user role if available and stored user role is not
         if (!role && user?.role) {
           role = user.role;
-          console.log("Using role from Redux:", role);
         }
 
-        // If we still don't have a role, check localStorage directly
         if (!role) {
           role = localStorage.getItem("role");
-          console.log("Using role from localStorage:", role);
         }
 
-        // If we still don't have a role, default to usher
         if (!role) {
-          role = "usher"; // Default role
-          console.log("No role found, defaulting to:", role);
+          role = "usher";
         }
 
-        // Determine endpoint based on role
         let endpoint = "";
         switch (role) {
           case "usher":
@@ -420,14 +406,10 @@ export default function Navbar({ forceAuth }) {
             endpoint = "/company/profile";
             break;
           default:
-            console.warn(`Unknown role: ${role}, defaulting to usher`);
             endpoint = "/usher/profile";
             break;
         }
 
-        console.log(`Fetching profile from endpoint: ${endpoint}`);
-
-        // Make API request with auth token
         const response = await fetch(
           `${import.meta.env.VITE_BASEURL}${endpoint}`,
           {
@@ -441,28 +423,18 @@ export default function Navbar({ forceAuth }) {
           const data = await response.json();
 
           if (data.profile) {
-            console.log("Profile fetched successfully:", data.profile);
-
-            // Add role to the profile data
             const profileWithRole = { ...data.profile, role };
             setUserProfile(profileWithRole);
 
-            // Update Redux store with complete user data
             dispatch({
               type: "auth/setUser",
               payload: profileWithRole,
             });
 
-            // Update localStorage with the enhanced user data
             localStorage.setItem("user", JSON.stringify(profileWithRole));
-          } else {
-            console.warn("Profile API returned empty profile data");
           }
         } else {
-          console.error(`Profile fetch failed with status: ${response.status}`);
-
           if (response.status === 401 || response.status === 403) {
-            // Token expired or invalid, clear auth
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             dispatch({ type: "auth/logout" });
@@ -474,10 +446,14 @@ export default function Navbar({ forceAuth }) {
       }
     };
 
-    if (isAuthenticated || localStorage.getItem("token")) {
+    if (
+      (isAuthenticated || localStorage.getItem("token")) &&
+      !hasRequestedProfile
+    ) {
+      setHasRequestedProfile(true);
       fetchUserProfile();
     }
-  }, [isAuthenticated, dispatch, user, navigate]);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -497,10 +473,8 @@ export default function Navbar({ forceAuth }) {
   };
 
   const getCurrentUser = () => {
-    // First try to use the fetched profile
     if (userProfile) return userProfile;
 
-    // Then try to use the Redux state
     if (user) return user;
 
     // Finally, try localStorage as a last resort

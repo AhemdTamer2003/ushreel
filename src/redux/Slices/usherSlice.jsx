@@ -4,6 +4,8 @@ import {
   updateUsherProfile,
   updateUsherExperience,
   uploadProfilePicture,
+  acceptOffer,
+  declineOffer,
 } from "../Services/usher";
 
 const initialState = {
@@ -95,6 +97,38 @@ const usherSlice = createSlice({
         }
       })
       .addCase(uploadProfilePicture.rejected, (state, action) => {
+        state.updateStatus = "failed";
+        state.updateError = action.payload;
+      });
+
+    // Accept Offer
+    builder
+      .addCase(acceptOffer.pending, (state) => {
+        state.updateStatus = "loading";
+        state.updateError = null;
+      })
+      .addCase(acceptOffer.fulfilled, (state) => {
+        state.updateStatus = "succeeded";
+        // Refresh the profile to get updated job lists
+        state.lastFetched = null;
+      })
+      .addCase(acceptOffer.rejected, (state, action) => {
+        state.updateStatus = "failed";
+        state.updateError = action.payload;
+      });
+
+    // Decline Offer
+    builder
+      .addCase(declineOffer.pending, (state) => {
+        state.updateStatus = "loading";
+        state.updateError = null;
+      })
+      .addCase(declineOffer.fulfilled, (state) => {
+        state.updateStatus = "succeeded";
+        // Refresh the profile to get updated job lists
+        state.lastFetched = null;
+      })
+      .addCase(declineOffer.rejected, (state, action) => {
         state.updateStatus = "failed";
         state.updateError = action.payload;
       });

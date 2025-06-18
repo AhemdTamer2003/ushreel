@@ -27,6 +27,9 @@ import {
   FaUser,
   FaBuilding,
   FaVideo,
+  FaDollarSign,
+  FaGlobe,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
 const AdminDashboard = () => {
@@ -116,6 +119,25 @@ const AdminDashboard = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Helper function to get job type display info
+  const getJobTypeInfo = (jobType) => {
+    if (jobType === "online") {
+      return {
+        label: "Online",
+        icon: <FaGlobe className="text-blue-400" />,
+        bgColor: "bg-blue-900/30",
+        borderColor: "border-blue-400",
+      };
+    } else {
+      return {
+        label: "Offline",
+        icon: <FaMapMarkerAlt className="text-green-400" />,
+        bgColor: "bg-green-900/30",
+        borderColor: "border-green-400",
+      };
+    }
   };
 
   const renderUsers = () => {
@@ -253,58 +275,93 @@ const AdminDashboard = () => {
         </h3>
 
         <div className="space-y-6">
-          {pendingJobs.data.map((job) => (
-            <div key={job._id} className="bg-gray-800 p-4 rounded-lg">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="text-[#C2A04C] font-bold text-lg">
-                    {job.title}
-                  </h4>
-                  <p className="text-gray-300 mt-1">{job.description}</p>
+          {pendingJobs.data.map((job) => {
+            const jobTypeInfo = getJobTypeInfo(job.jobType);
 
-                  <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-                    <div>
-                      <p className="text-gray-400">Company:</p>
-                      <p className="text-white">
-                        {job.company?.name || "Unknown"}
-                      </p>
+            return (
+              <div key={job._id} className="bg-gray-800 p-4 rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="text-[#C2A04C] font-bold text-lg">
+                        {job.title}
+                      </h4>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${jobTypeInfo.bgColor} ${jobTypeInfo.borderColor} flex items-center gap-1`}
+                      >
+                        {jobTypeInfo.icon}
+                        {jobTypeInfo.label}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-gray-400">Location:</p>
-                      <p className="text-white">{job.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Date:</p>
-                      <p className="text-white">
-                        {formatDate(job.startDate)} - {formatDate(job.endDate)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Number of Ushers:</p>
-                      <p className="text-white">{job.numOfUshers}</p>
+
+                    <p className="text-gray-300 mt-1 mb-3">{job.description}</p>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-400">Company:</p>
+                        <p className="text-white">
+                          {job.company?.name || "Unknown"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400">Location:</p>
+                        <p className="text-white">{job.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400">Date:</p>
+                        <p className="text-white">
+                          {formatDate(job.startDate)} -{" "}
+                          {formatDate(job.endDate)}
+                        </p>
+                      </div>
+
+                      {job.jobType === "offline" && (
+                        <>
+                          <div>
+                            <p className="text-gray-400">Number of Ushers:</p>
+                            <p className="text-white">{job.numOfUshers}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400">Salary per Usher:</p>
+                            <p className="text-white flex items-center">
+                              <FaDollarSign className="text-green-400 mr-1" />
+                              {job.salaryPerUsher}
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {job.jobType === "online" && (
+                        <div>
+                          <p className="text-gray-400">Content Creators:</p>
+                          <p className="text-white">
+                            {job.contentCreators?.length || 0} selected
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
 
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleApproveJob(job._id)}
-                    className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors"
-                    title="Approve"
-                  >
-                    <FaCheck />
-                  </button>
-                  <button
-                    onClick={() => openRejectDialog(job._id)}
-                    className="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition-colors"
-                    title="Reject"
-                  >
-                    <FaTimes />
-                  </button>
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => handleApproveJob(job._id)}
+                      className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors"
+                      title="Approve"
+                    >
+                      <FaCheck />
+                    </button>
+                    <button
+                      onClick={() => openRejectDialog(job._id)}
+                      className="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition-colors"
+                      title="Reject"
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );

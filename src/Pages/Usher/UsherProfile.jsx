@@ -18,22 +18,20 @@ import {
   updateUsherProfile,
   updateUsherExperience,
   uploadProfilePicture,
+  acceptOffer,
+  declineOffer,
 } from "../../redux/Services/usher";
-import {
-  clearErrors,
-  resetUpdateStatus,
-  setLastFetched,
-} from "../../redux/Slices/usherSlice";
+import { clearErrors, resetUpdateStatus } from "../../redux/Slices/usherSlice";
 import Navbar from "../../components/Shared/Navbar";
 
 function UsherProfile() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { profile, loading, error, updateStatus, updateError, lastFetched } =
-    useSelector((state) => state.usher);
+  const { profile, loading, error, updateStatus, updateError } = useSelector(
+    (state) => state.usher
+  );
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const authUser = useSelector((state) => state.auth.user);
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingExperience, setIsEditingExperience] = useState(false);
@@ -49,12 +47,9 @@ function UsherProfile() {
     experience: "",
   });
 
-  // Prevent excessive profile requests by using a ref to track if we've already fetched
   const hasRequestedProfile = useRef(false);
 
-  // Debug logging with reduced frequency
-  const logCounter = useRef(0);
-
+  // Authentication check and profile fetch - runs only once
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error("Please log in to view your profile");
@@ -62,30 +57,15 @@ function UsherProfile() {
       return;
     }
 
-    // Calculate if we should fetch based on:
-    // 1. We haven't fetched in this session (hasRequestedProfile is false)
-    // 2. We don't have profile data yet
-    // 3. The last fetch was more than 5 minutes ago
-    const shouldFetch =
-      (!hasRequestedProfile.current && !profile) ||
-      (!profile && lastFetched === null) ||
-      (lastFetched && Date.now() - lastFetched > 5 * 60 * 1000);
-
-    if (shouldFetch) {
+    // Only fetch if we haven't requested yet
+    if (!hasRequestedProfile.current) {
       console.log("Fetching usher profile...");
       hasRequestedProfile.current = true;
       dispatch(fetchUsherProfile());
-    } else if (!hasRequestedProfile.current) {
-      // Mark as requested even if we didn't fetch
-      hasRequestedProfile.current = true;
-      console.log("Using cached profile data");
-      // Update the lastFetched timestamp to prevent unnecessary refetches
-      if (profile && !lastFetched) {
-        dispatch(setLastFetched(Date.now()));
-      }
     }
-  }, [isAuthenticated, dispatch, navigate, profile, lastFetched]);
+  }, [isAuthenticated, dispatch, navigate]);
 
+  // Update form data when profile loads - runs only when profile changes
   useEffect(() => {
     if (profile) {
       setEditFormData({
@@ -103,6 +83,7 @@ function UsherProfile() {
     }
   }, [profile]);
 
+  // Handle update status changes
   useEffect(() => {
     if (updateStatus === "succeeded") {
       toast.success("Profile updated successfully");
@@ -115,6 +96,7 @@ function UsherProfile() {
     }
   }, [updateStatus, updateError, dispatch]);
 
+  // Handle errors
   useEffect(() => {
     if (error) {
       if (error.includes("401")) {
@@ -127,38 +109,8 @@ function UsherProfile() {
     }
   }, [error, navigate, dispatch]);
 
+  // Reset the request flag when component unmounts
   useEffect(() => {
-    // Only log occasionally to reduce console spam
-    if (logCounter.current % 5 === 0) {
-      console.log("Auth state:", {
-        isAuthenticated,
-        profileLoaded: !!profile,
-        authUserLoaded: !!authUser,
-        localStorageToken: !!localStorage.getItem("token"),
-        localStorageUser: !!localStorage.getItem("user"),
-        fetchCount: logCounter.current,
-      });
-    }
-
-    logCounter.current++;
-
-    // Only try to fix auth state if token exists but not authenticated
-    if (!isAuthenticated && localStorage.getItem("token")) {
-      try {
-        const userData = localStorage.getItem("user");
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          dispatch({ type: "auth/setUser", payload: parsedUser });
-        }
-      } catch (e) {
-        console.error("Error parsing user data:", e);
-      }
-    }
-  }, [isAuthenticated, authUser, dispatch]);
-
-  // Add cleanup for hasRequestedProfile when component unmounts
-  useEffect(() => {
-    // Reset the request flag when component unmounts
     return () => {
       hasRequestedProfile.current = false;
     };
@@ -222,6 +174,32 @@ function UsherProfile() {
     }));
   };
 
+  const handleAcceptOffer = (offerId) => {
+    dispatch(acceptOffer(offerId))
+      .unwrap()
+      .then(() => {
+        toast.success("Offer accepted successfully!");
+        // Refresh profile to get updated job lists
+        dispatch(fetchUsherProfile());
+      })
+      .catch((error) => {
+        toast.error(error || "Failed to accept offer");
+      });
+  };
+
+  const handleDeclineOffer = (offerId) => {
+    dispatch(declineOffer(offerId))
+      .unwrap()
+      .then(() => {
+        toast.success("Offer declined successfully!");
+        // Refresh profile to get updated job lists
+        dispatch(fetchUsherProfile());
+      })
+      .catch((error) => {
+        toast.error(error || "Failed to decline offer");
+      });
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -261,11 +239,6 @@ function UsherProfile() {
     );
   }
 
-  // Debug profile picture path
-  console.log("Profile picture path:", profile?.profilePicture);
-  const profilePicUrl = getProfilePictureUrl(profile?.profilePicture);
-  console.log("Formatted profile picture URL:", profilePicUrl);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-[#C2A04C]">
       {/* Use shared Navbar component with forced auth */}
@@ -278,13 +251,9 @@ function UsherProfile() {
           <div className="flex items-center space-x-8 mb-8">
             <div className="relative">
               <img
-                src={profilePicUrl}
+                src={getProfilePictureUrl(profile?.profilePicture)}
                 alt="Profile"
                 className="w-32 h-32 rounded-full object-cover border-4 border-[#C2A04C]"
-                onError={(e) => {
-                  console.error("Error loading profile image:", e);
-                  e.target.src = "/default-profile.jpg";
-                }}
               />
               <label className="absolute bottom-2 right-2 cursor-pointer bg-[#C2A04C] rounded-full p-2">
                 <input
@@ -410,6 +379,148 @@ function UsherProfile() {
                       No experience roles detected yet. Update your experience
                       description to get AI-based role suggestions.
                     </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Available Job Offers */}
+              <div className="mt-8">
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                  Available Job Offers ({profile?.availableOffers?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {profile?.availableOffers?.length > 0 ? (
+                    profile.availableOffers.map((offer, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/30 p-4 rounded border border-[#C2A04C]/30"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-white font-semibold">
+                            {offer.jobTitle}
+                          </h4>
+                          <span className="text-[#C2A04C] font-bold">
+                            ${offer.salaryPerUsher}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          {offer.companyName}
+                        </p>
+                        <p className="text-gray-400 text-sm mb-2">
+                          📍 {offer.location}
+                        </p>
+                        <p className="text-gray-400 text-sm mb-3">
+                          📅 {new Date(offer.startDate).toLocaleDateString()} -{" "}
+                          {new Date(offer.endDate).toLocaleDateString()}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleAcceptOffer(offer.offerId)}
+                            variant="contained"
+                            size="small"
+                            sx={{
+                              backgroundColor: "#4CAF50",
+                              "&:hover": { backgroundColor: "#45a049" },
+                            }}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            onClick={() => handleDeclineOffer(offer.offerId)}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              color: "#f44336",
+                              borderColor: "#f44336",
+                              "&:hover": {
+                                borderColor: "#d32f2f",
+                                color: "#d32f2f",
+                              },
+                            }}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No job offers available</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Upcoming Jobs */}
+              <div className="mt-8">
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                  Upcoming Jobs ({profile?.upcomingJobs?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {profile?.upcomingJobs?.length > 0 ? (
+                    profile.upcomingJobs.map((job, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/30 p-4 rounded border border-green-500/30"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-white font-semibold">
+                            {job.title}
+                          </h4>
+                          <span className="text-green-400 font-bold">
+                            ${job.salaryPerUsher}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          📍 {job.location}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          📅 {new Date(job.startDate).toLocaleDateString()} -{" "}
+                          {new Date(job.endDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          🕐 {job.startTime} - {job.endTime}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No upcoming jobs</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Past Jobs */}
+              <div className="mt-8">
+                <h3 className="text-[#C2A04C] text-xl font-bold mb-3">
+                  Past Jobs ({profile?.pastJobs?.length || 0})
+                </h3>
+                <div className="space-y-3">
+                  {profile?.pastJobs?.length > 0 ? (
+                    profile.pastJobs.map((job, index) => (
+                      <div
+                        key={index}
+                        className="bg-black/30 p-4 rounded border border-gray-500/30"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="text-gray-300 font-semibold">
+                            {job.title}
+                          </h4>
+                          <span className="text-gray-400 font-bold">
+                            ${job.salaryPerUsher}
+                          </span>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          📍 {job.location}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          📅 {new Date(job.startDate).toLocaleDateString()} -{" "}
+                          {new Date(job.endDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          🕐 {job.startTime} - {job.endTime}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No past jobs</p>
                   )}
                 </div>
               </div>

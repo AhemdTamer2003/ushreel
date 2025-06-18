@@ -1,4 +1,3 @@
-// Recommendations.jsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -38,7 +37,6 @@ function Recommendations() {
   useEffect(() => {
     if (jobId && !hasRequested) {
       dispatch(getRecommendedUshers(jobId));
-      // setHasRequested(true);
     }
   }, [jobId, dispatch, hasRequested]);
 
@@ -70,7 +68,6 @@ function Recommendations() {
     navigate("/company-profile", { state: { jobCreated: true } });
   };
 
-  // Filter ushers based on search term
   const filteredUshers = recommendedUshers.filter((usher) =>
     usher.fullName.toLowerCase().includes(searchUsher.toLowerCase())
   );

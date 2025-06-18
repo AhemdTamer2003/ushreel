@@ -19,10 +19,9 @@ const AdminLogin = () => {
 
   const [pin, setPin] = useState("");
   const [pinVerified, setPinVerified] = useState(false);
-  const ADMIN_PIN = "4444"; // The hidden PIN for admin access
+  const ADMIN_PIN = "4444";
 
   useEffect(() => {
-    // Redirect if already authenticated
     if (isAdminAuthenticated) {
       navigate("/admin/dashboard");
     }
@@ -58,7 +57,6 @@ const AdminLogin = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate form
     if (!formData.email || !formData.password) {
       toast.error("Please enter both email and password");
       return;

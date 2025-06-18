@@ -26,6 +26,16 @@ export const updateUsherProfile = createAsyncThunk(
       const response = await apiClient.patch("/usher/profile", profileData);
       return response.data;
     } catch (error) {
+      if (
+        error.response?.data?.errors &&
+        Array.isArray(error.response.data.errors)
+      ) {
+        const errorMessages = error.response.data.errors
+          .map((err) => err.msg)
+          .join(", ");
+        return rejectWithValue(errorMessages);
+      }
+
       return rejectWithValue(
         error.response?.data?.message ||
           error.message ||
@@ -94,6 +104,40 @@ export const uploadProfilePicture = createAsyncThunk(
         error.response?.data?.message ||
           error.message ||
           "Failed to upload profile picture"
+      );
+    }
+  }
+);
+
+// Accept job offer
+export const acceptOffer = createAsyncThunk(
+  "usher/acceptOffer",
+  async (offerId, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post(`/usher/offers/${offerId}/accept`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to accept offer"
+      );
+    }
+  }
+);
+
+// Decline job offer
+export const declineOffer = createAsyncThunk(
+  "usher/declineOffer",
+  async (offerId, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post(`/usher/offers/${offerId}/decline`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to decline offer"
       );
     }
   }

@@ -1,4 +1,3 @@
-// Main app routes configuration
 import Home from "../Pages/Home/Home";
 import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Register";
@@ -19,11 +18,13 @@ import CompanyProfile from "../Pages/Company/CompanyProfile";
 import MarketingSelectionPages from "../Pages/Marketing/MarketingSelectionPages";
 import FormDescription from "../Pages/General/FormDescription";
 import Recommendations from "../Pages/General/Recommendations";
+import ContentCreatorRecommendations from "../Pages/General/ContentCreatorRecommendations";
 import ResetOtp from "../Pages/Auth/ResetOtp";
 import { NotFound } from "../components/Shared/NotFound";
 import AdminLogin from "../Pages/Admin/AdminLogin";
 import AdminRegister from "../Pages/Admin/AdminRegister";
 import AdminDashboard from "../Pages/Admin/AdminDashboard";
+import JobOfferDetails from "../Pages/Company/JobOfferDetails";
 
 export const routes = {
   // Main public routes
@@ -112,6 +113,16 @@ export const routes = {
       path: "/recommendations",
       element: <Recommendations />,
       label: "Recommendations",
+    },
+    {
+      path: "/content-creator-recommendations",
+      element: <ContentCreatorRecommendations />,
+      label: "Content Creator Recommendations",
+    },
+    {
+      path: "/job-details/:jobId",
+      element: <JobOfferDetails />,
+      label: "Job Offer Details",
     },
   ],
 

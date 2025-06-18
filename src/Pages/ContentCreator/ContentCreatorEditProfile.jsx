@@ -4,7 +4,7 @@ import { FaCamera, FaInstagram, FaFacebook, FaArrowLeft } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
   updateContentCreatorProfile,
-  uploadProfilePicture,
+  uploadContentCreatorProfilePicture,
 } from "../../redux/Services/contentCreator";
 import { toast } from "react-toastify";
 
@@ -105,7 +105,7 @@ function ContentCreatorEditProfile() {
     const file = event.target.files[0];
     if (file) {
       try {
-        await dispatch(uploadProfilePicture(file)).unwrap();
+        await dispatch(uploadContentCreatorProfilePicture(file)).unwrap();
         toast.success("Profile picture updated successfully");
       } catch (error) {
         toast.error(error || "Failed to upload profile picture");
