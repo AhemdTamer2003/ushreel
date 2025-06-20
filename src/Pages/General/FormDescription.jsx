@@ -117,7 +117,7 @@ function FormDescription() {
 
     try {
       const [year, month, day] = dateString.split("-");
-      return `${year}-${day}-${month}`;
+      return `${year}-${month}-${day}`;
     } catch (error) {
       console.error("Date format error:", error);
       return dateString;

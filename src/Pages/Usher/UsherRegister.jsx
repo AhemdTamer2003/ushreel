@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Button,
   FormControl,
@@ -36,6 +36,7 @@ function UsherRegister() {
     gender: "",
     phone: "",
     birthdate: "",
+    address: "",
     role: "usher",
   });
 
@@ -73,6 +74,7 @@ function UsherRegister() {
       newErrors.phone = "Invalid phone number format";
     }
     if (!formData.birthdate) newErrors.birthdate = "Birthdate is required";
+    if (!formData.address.trim()) newErrors.address = "Address is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -91,7 +93,7 @@ function UsherRegister() {
       return;
     }
 
-    const { confirmPassword, ...dataToSend } = formData;
+    const { confirmPassword, ...dataToSend } = formData; // eslint-disable-line no-unused-vars
     try {
       await dispatch(registerUshear(dataToSend)).unwrap();
       localStorage.setItem("registrationEmail", formData.email);
@@ -265,6 +267,19 @@ function UsherRegister() {
                 shrink: true,
               }}
               sx={inputStyle}
+            />
+
+            <TextField
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              error={!!errors.address}
+              helperText={errors.address}
+              fullWidth
+              sx={inputStyle}
+              multiline
+              rows={2}
             />
 
             <Button
