@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   TextField,
   Button,
@@ -8,34 +7,29 @@ import {
   Paper,
   Box,
   Typography,
-  IconButton
-} from '@mui/material';
-import {
-  LockOutlined,
-  ArrowBack
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
-import { verifyEmail, selectAuth } from '../../redux/Slices/authSlice';
-import backgroundImg from '../../assets/AuthAssets/loginbackground.png';
+  IconButton,
+} from "@mui/material";
+import { LockOutlined, ArrowBack } from "@mui/icons-material";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import backgroundImg from "../../assets/AuthAssets/loginbackground.png";
 
 function ResetOtp() {
-  const dispatch = useDispatch();
-  const { loading } = useSelector(selectAuth);
   const navigate = useNavigate();
   const location = useLocation();
+  const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef([]);
 
-  const email = location.state?.email || localStorage.getItem('verificationEmail');
-  const fromLogin = location.state?.fromLogin;
+  const email = location.state?.email || localStorage.getItem("resetEmail");
+  const fromForgotPassword = location.state?.fromForgotPassword;
 
   useEffect(() => {
-    if (!email) {
-      toast.error('No email found. Please try again.');
-      navigate('/login');
+    if (!email || !fromForgotPassword) {
+      toast.error("Invalid access. Please start from forgot password.");
+      navigate("/forgot-password");
       return;
     }
 
@@ -54,7 +48,7 @@ function ResetOtp() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [email, navigate]);
+  }, [email, fromForgotPassword, navigate]);
 
   const handleChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
@@ -65,66 +59,110 @@ function ResetOtp() {
   };
 
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1].focus();
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 6);
+    const pastedData = e.clipboardData.getData("text").slice(0, 6);
     if (!/^\d+$/.test(pastedData)) return;
 
     const newOtp = [...otp];
-    pastedData.split('').forEach((char, index) => {
+    pastedData.split("").forEach((char, index) => {
       if (index < 6) newOtp[index] = char;
     });
     setOtp(newOtp);
     if (inputRefs.current[5]) inputRefs.current[5].focus();
   };
 
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (!canResend) return;
-    toast.success('Verification code resent! (Demo)');
-    setTimeLeft(60);
-    setCanResend(false);
-    setOtp(['', '', '', '', '', '']);
-    if (inputRefs.current[0]) inputRefs.current[0].focus();
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        "http://localhost:3000/auth/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Reset code sent again!");
+        setTimeLeft(60);
+        setCanResend(false);
+        setOtp(["", "", "", "", "", ""]);
+        if (inputRefs.current[0]) inputRefs.current[0].focus();
+      } else {
+        throw new Error("Failed to resend code");
+      }
+    } catch (error) {
+      toast.error("Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const otpString = otp.join('');
-  
+    const otpString = otp.join("");
+
     if (otpString.length !== 6) {
-      toast.error('Please enter all 6 digits');
+      toast.error("Please enter all 6 digits");
       return;
     }
-  
+
+    setLoading(true);
     try {
-      await dispatch(verifyEmail({
-        email,
-        verificationCode: otpString
-      })).unwrap();
-  
-      toast.success('Email verified successfully!');
-      navigate('/add-experience', { replace: true });
-  
+      const response = await fetch("http://localhost:3000/auth/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          otp: otpString,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("OTP verified successfully!");
+        // Store verified OTP for reset password page
+        localStorage.setItem("verifiedOtp", otpString);
+        navigate("/ResetPassword", {
+          state: {
+            email,
+            otp: otpString,
+          },
+        });
+      } else {
+        throw new Error(data.message || "OTP verification failed");
+      }
     } catch (error) {
-      toast.error(error?.message || 'Verification failed. Please try again.');
-      setOtp(['', '', '', '', '', '']);
+      toast.error(error.message || "Verification failed. Please try again.");
+      setOtp(["", "", "", "", "", ""]);
       if (inputRefs.current[0]) inputRefs.current[0].focus();
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
         backgroundImage: `url(${backgroundImg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
       }}
     >
       <motion.div
@@ -137,18 +175,18 @@ function ResetOtp() {
           elevation={24}
           className="p-8 rounded-xl relative"
           sx={{
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
           <IconButton
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/forgot-password")}
             sx={{
-              position: 'absolute',
+              position: "absolute",
               top: 16,
               left: 16,
-              color: '#D4A537'
+              color: "#D4A537",
             }}
           >
             <ArrowBack />
@@ -156,13 +194,14 @@ function ResetOtp() {
 
           <Box className="text-center mb-8">
             <div className="w-16 h-16 bg-[#D4A537] rounded-full flex items-center justify-center mx-auto mb-4">
-              <LockOutlined sx={{ fontSize: 32, color: 'white' }} />
+              <LockOutlined sx={{ fontSize: 32, color: "white" }} />
             </div>
             <Typography variant="h4" className="text-[#D4A537] font-bold mb-2">
-              Verify Email
+              Verify Reset Code
             </Typography>
             <Typography variant="body1" className="text-gray-300">
-              Resetting code sent to<br />
+              Enter the 6-digit code sent to
+              <br />
               <span className="text-[#D4A537] font-medium">{email}</span>
             </Typography>
           </Box>
@@ -172,7 +211,7 @@ function ResetOtp() {
               {otp.map((digit, index) => (
                 <TextField
                   key={index}
-                  inputRef={el => inputRefs.current[index] = el}
+                  inputRef={(el) => (inputRefs.current[index] = el)}
                   value={digit}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
@@ -181,23 +220,23 @@ function ResetOtp() {
                   inputProps={{
                     maxLength: 1,
                     style: {
-                      textAlign: 'center',
-                      fontSize: '1.5rem',
-                      padding: '12px',
-                      color: 'white'
-                    }
+                      textAlign: "center",
+                      fontSize: "1.5rem",
+                      padding: "12px",
+                      color: "white",
+                    },
                   }}
                   sx={{
-                    width: '48px',
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: '#D4A537',
+                    width: "48px",
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: "#D4A537",
                       },
-                      '&:hover fieldset': {
-                        borderColor: '#D4A537',
+                      "&:hover fieldset": {
+                        borderColor: "#D4A537",
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#D4A537',
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#D4A537",
                       },
                     },
                   }}
@@ -209,26 +248,26 @@ function ResetOtp() {
               type="submit"
               variant="contained"
               fullWidth
-              disabled={loading || otp.join('').length !== 6}
+              disabled={loading || otp.join("").length !== 6}
               sx={{
-                backgroundColor: '#D4A537',
-                color: 'white',
-                height: '48px',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                '&:hover': {
-                  backgroundColor: '#b88c2e',
+                backgroundColor: "#D4A537",
+                color: "white",
+                height: "48px",
+                fontSize: "1rem",
+                fontWeight: "bold",
+                "&:hover": {
+                  backgroundColor: "#b88c2e",
                 },
-                '&:disabled': {
-                  backgroundColor: '#7c6320',
-                  color: 'rgba(255, 255, 255, 0.7)',
+                "&:disabled": {
+                  backgroundColor: "#7c6320",
+                  color: "rgba(255, 255, 255, 0.7)",
                 },
               }}
             >
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                'Verify Code'
+                "Verify Code"
               )}
             </Button>
 
@@ -239,20 +278,20 @@ function ResetOtp() {
                 disabled={!canResend || loading}
                 className={`text-sm ${
                   canResend
-                    ? 'text-[#D4A537] hover:text-[#b88c2e] cursor-pointer'
-                    : 'text-gray-500 cursor-not-allowed'
+                    ? "text-[#D4A537] hover:text-[#b88c2e] cursor-pointer"
+                    : "text-gray-500 cursor-not-allowed"
                 } transition-colors`}
               >
-                {canResend ? 'Resend Code' : `Resend code in ${timeLeft}s`}
+                {canResend ? "Resend Code" : `Resend code in ${timeLeft}s`}
               </button>
 
               <Typography variant="body2" className="text-gray-400">
-                Didn't receive the code?{' '}
+                Didn't receive the code?{" "}
                 <Link
-                  to="/contact-support"
+                  to="/forgot-password"
                   className="text-[#D4A537] hover:text-[#b88c2e] transition-colors"
                 >
-                  Contact Support
+                  Try Again
                 </Link>
               </Typography>
             </div>

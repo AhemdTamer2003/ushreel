@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { 
-  TextField, 
-  Button, 
-  CircularProgress, 
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import {
+  TextField,
+  Button,
+  CircularProgress,
   Paper,
   Typography,
   Box,
   InputAdornment,
-  IconButton 
-} from '@mui/material';
-import { 
-  LockOutlined, 
-  Visibility, 
+  IconButton,
+} from "@mui/material";
+import {
+  LockOutlined,
+  Visibility,
   VisibilityOff,
   CheckCircleOutline,
-  ArrowBack
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-toastify';
-import backgroundImg from '../../assets/AuthAssets/loginbackground.png';
+  ArrowBack,
+} from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
+import backgroundImg from "../../assets/AuthAssets/loginbackground.png";
 
 function ResetPassword() {
   const navigate = useNavigate();
@@ -28,84 +28,87 @@ function ResetPassword() {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    newPassword: '',
-    confirmPassword: ''
+    newPassword: "",
+    confirmPassword: "",
   });
 
   const [showPassword, setShowPassword] = useState({
     newPassword: false,
-    confirmPassword: false
+    confirmPassword: false,
   });
 
   const [errors, setErrors] = useState({
-    newPassword: '',
-    confirmPassword: ''
+    newPassword: "",
+    confirmPassword: "",
   });
 
   // Get email and OTP from location state
-  const email = location.state?.email || localStorage.getItem('resetEmail');
+  const email = location.state?.email || localStorage.getItem("resetEmail");
   const otp = location.state?.otp;
 
   useEffect(() => {
     // Check both location state and localStorage
-    const verifiedEmail = email || localStorage.getItem('resetEmail');
-    const verifiedOtp = otp || localStorage.getItem('verifiedOtp');
-  
-    console.log('Reset Password Mount:', { verifiedEmail, verifiedOtp });
-  
+    const verifiedEmail = email || localStorage.getItem("resetEmail");
+    const verifiedOtp = otp || localStorage.getItem("verifiedOtp");
+
+    console.log("Reset Password Mount:", { verifiedEmail, verifiedOtp });
+
     if (!verifiedEmail || !verifiedOtp) {
-      toast.error('Invalid reset attempt. Please try again.');
-      navigate('/forgot-password');
+      toast.error("Invalid reset attempt. Please try again.");
+      navigate("/forgot-password");
     }
   }, [email, otp, navigate]);
 
   // Password validation criteria
   const passwordCriteria = [
-    { label: 'At least 8 characters', test: pwd => pwd.length >= 8 },
-    { label: 'Contains a number', test: pwd => /\d/.test(pwd) },
-    { label: 'Contains a lowercase letter', test: pwd => /[a-z]/.test(pwd) },
-    { label: 'Contains an uppercase letter', test: pwd => /[A-Z]/.test(pwd) },
-    { label: 'Contains a special character', test: pwd => /[!@#$%^&*]/.test(pwd) }
+    { label: "At least 8 characters", test: (pwd) => pwd.length >= 8 },
+    { label: "Contains a number", test: (pwd) => /\d/.test(pwd) },
+    { label: "Contains a lowercase letter", test: (pwd) => /[a-z]/.test(pwd) },
+    { label: "Contains an uppercase letter", test: (pwd) => /[A-Z]/.test(pwd) },
+    {
+      label: "Contains a special character",
+      test: (pwd) => /[!@#$%^&*]/.test(pwd),
+    },
   ];
 
   const validatePassword = (password) => {
     const failedCriteria = passwordCriteria
-      .filter(criteria => !criteria.test(password))
-      .map(criteria => criteria.label);
-    
-    return failedCriteria.length === 0 ? '' : failedCriteria.join(', ');
+      .filter((criteria) => !criteria.test(password))
+      .map((criteria) => criteria.label);
+
+    return failedCriteria.length === 0 ? "" : failedCriteria.join(", ");
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Clear errors when typing
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [name]: ''
+      [name]: "",
     }));
 
     // Validate password as user types
-    if (name === 'newPassword') {
+    if (name === "newPassword") {
       const passwordError = validatePassword(value);
       if (passwordError) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          newPassword: passwordError
+          newPassword: passwordError,
         }));
       }
     }
 
     // Check password match when confirming
-    if (name === 'confirmPassword') {
+    if (name === "confirmPassword") {
       if (value !== formData.newPassword) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          confirmPassword: 'Passwords do not match'
+          confirmPassword: "Passwords do not match",
         }));
       }
     }
@@ -113,74 +116,81 @@ function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate passwords
     const passwordError = validatePassword(formData.newPassword);
     if (passwordError) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        newPassword: passwordError
+        newPassword: passwordError,
       }));
       return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        confirmPassword: 'Passwords do not match'
+        confirmPassword: "Passwords do not match",
       }));
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          otp,
-          newPassword: formData.newPassword
-        })
-      });
+      const response = await fetch(
+        "http://localhost:3000/auth/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            otp,
+            newPassword: formData.newPassword,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
         setSuccess(true);
-        toast.success('Password reset successfully!');
-        localStorage.removeItem('resetEmail');
-        
+        toast.success("Password reset successfully!");
+        localStorage.removeItem("resetEmail");
+        localStorage.removeItem("verifiedOtp");
+
         setTimeout(() => {
-          navigate('/login', {
-            state: { successMessage: 'Password has been reset successfully. Please login with your new password.' }
+          navigate("/login", {
+            state: {
+              successMessage:
+                "Password has been reset successfully. Please login with your new password.",
+            },
           });
         }, 2000);
       } else {
-        throw new Error(data.message || 'Failed to reset password');
+        throw new Error(data.message || "Failed to reset password");
       }
     } catch (err) {
-      toast.error(err.message || 'Failed to reset password');
+      toast.error(err.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
   };
 
   const togglePasswordVisibility = (field) => {
-    setShowPassword(prev => ({
+    setShowPassword((prev) => ({
       ...prev,
-      [field]: !prev[field]
+      [field]: !prev[field],
     }));
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ 
+      style={{
         backgroundImage: `url(${backgroundImg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
       }}
     >
       <AnimatePresence>
@@ -191,23 +201,23 @@ function ResetPassword() {
           transition={{ duration: 0.6 }}
           className="w-full max-w-md"
         >
-          <Paper 
+          <Paper
             elevation={24}
             className="p-8 rounded-xl relative"
-            sx={{ 
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
+            sx={{
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
             }}
           >
             {!success && (
               <IconButton
                 onClick={() => navigate(-1)}
-                sx={{ 
-                  position: 'absolute',
+                sx={{
+                  position: "absolute",
                   top: 16,
                   left: 16,
-                  color: '#D4A537'
+                  color: "#D4A537",
                 }}
               >
                 <ArrowBack />
@@ -220,12 +230,12 @@ function ResetPassword() {
                 animate={{ scale: 1 }}
                 className="text-center py-8"
               >
-                <CheckCircleOutline 
-                  sx={{ 
-                    fontSize: 64, 
-                    color: '#4CAF50',
-                    marginBottom: 2
-                  }} 
+                <CheckCircleOutline
+                  sx={{
+                    fontSize: 64,
+                    color: "#4CAF50",
+                    marginBottom: 2,
+                  }}
                 />
                 <Typography variant="h5" className="text-white mb-4">
                   Password Reset Successful!
@@ -238,9 +248,12 @@ function ResetPassword() {
               <>
                 <Box className="text-center mb-8">
                   <div className="w-16 h-16 bg-[#D4A537] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <LockOutlined sx={{ fontSize: 32, color: 'white' }} />
+                    <LockOutlined sx={{ fontSize: 32, color: "white" }} />
                   </div>
-                  <Typography variant="h4" className="text-[#D4A537] font-bold mb-2">
+                  <Typography
+                    variant="h4"
+                    className="text-[#D4A537] font-bold mb-2"
+                  >
                     Reset Password
                   </Typography>
                   <Typography variant="body1" className="text-gray-300">
@@ -252,7 +265,7 @@ function ResetPassword() {
                   <TextField
                     label="New Password"
                     name="newPassword"
-                    type={showPassword.newPassword ? 'text' : 'password'}
+                    type={showPassword.newPassword ? "text" : "password"}
                     value={formData.newPassword}
                     onChange={handleChange}
                     error={!!errors.newPassword}
@@ -263,33 +276,39 @@ function ResetPassword() {
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            onClick={() => togglePasswordVisibility('newPassword')}
+                            onClick={() =>
+                              togglePasswordVisibility("newPassword")
+                            }
                             edge="end"
-                            sx={{ color: '#D4A537' }}
+                            sx={{ color: "#D4A537" }}
                           >
-                            {showPassword.newPassword ? <VisibilityOff /> : <Visibility />}
+                            {showPassword.newPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: 'white',
-                        '& fieldset': {
-                          borderColor: '#D4A537',
+                      "& .MuiOutlinedInput-root": {
+                        color: "white",
+                        "& fieldset": {
+                          borderColor: "#D4A537",
                         },
-                        '&:hover fieldset': {
-                          borderColor: '#D4A537',
+                        "&:hover fieldset": {
+                          borderColor: "#D4A537",
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#D4A537',
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#D4A537",
                         },
                       },
-                      '& .MuiInputLabel-root': {
-                        color: '#D4A537',
+                      "& .MuiInputLabel-root": {
+                        color: "#D4A537",
                       },
-                      '& .MuiFormHelperText-root': {
-                        color: errors.newPassword ? '#f44336' : '#D4A537',
+                      "& .MuiFormHelperText-root": {
+                        color: errors.newPassword ? "#f44336" : "#D4A537",
                       },
                     }}
                   />
@@ -297,7 +316,7 @@ function ResetPassword() {
                   <TextField
                     label="Confirm Password"
                     name="confirmPassword"
-                    type={showPassword.confirmPassword ? 'text' : 'password'}
+                    type={showPassword.confirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     error={!!errors.confirmPassword}
@@ -308,33 +327,39 @@ function ResetPassword() {
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            onClick={() => togglePasswordVisibility('confirmPassword')}
+                            onClick={() =>
+                              togglePasswordVisibility("confirmPassword")
+                            }
                             edge="end"
-                            sx={{ color: '#D4A537' }}
+                            sx={{ color: "#D4A537" }}
                           >
-                            {showPassword.confirmPassword ? <VisibilityOff /> : <Visibility />}
+                            {showPassword.confirmPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        color: 'white',
-                        '& fieldset': {
-                          borderColor: '#D4A537',
+                      "& .MuiOutlinedInput-root": {
+                        color: "white",
+                        "& fieldset": {
+                          borderColor: "#D4A537",
                         },
-                        '&:hover fieldset': {
-                          borderColor: '#D4A537',
+                        "&:hover fieldset": {
+                          borderColor: "#D4A537",
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#D4A537',
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#D4A537",
                         },
                       },
-                      '& .MuiInputLabel-root': {
-                        color: '#D4A537',
+                      "& .MuiInputLabel-root": {
+                        color: "#D4A537",
                       },
-                      '& .MuiFormHelperText-root': {
-                        color: errors.confirmPassword ? '#f44336' : '#D4A537',
+                      "& .MuiFormHelperText-root": {
+                        color: errors.confirmPassword ? "#f44336" : "#D4A537",
                       },
                     }}
                   />
@@ -349,8 +374,8 @@ function ResetPassword() {
                           key={index}
                           className={`text-sm flex items-center ${
                             criteria.test(formData.newPassword)
-                              ? 'text-green-500'
-                              : 'text-gray-400'
+                              ? "text-green-500"
+                              : "text-gray-400"
                           }`}
                         >
                           <CheckCircleOutline
@@ -358,8 +383,8 @@ function ResetPassword() {
                               fontSize: 16,
                               marginRight: 1,
                               color: criteria.test(formData.newPassword)
-                                ? '#4CAF50'
-                                : '#666'
+                                ? "#4CAF50"
+                                : "#666",
                             }}
                           />
                           {criteria.label}
@@ -372,26 +397,30 @@ function ResetPassword() {
                     type="submit"
                     variant="contained"
                     fullWidth
-                    disabled={loading || !!errors.newPassword || !!errors.confirmPassword}
+                    disabled={
+                      loading ||
+                      !!errors.newPassword ||
+                      !!errors.confirmPassword
+                    }
                     sx={{
-                      backgroundColor: '#D4A537',
-                      color: 'white',
-                      height: '48px',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        backgroundColor: '#b88c2e',
+                      backgroundColor: "#D4A537",
+                      color: "white",
+                      height: "48px",
+                      fontSize: "1rem",
+                      fontWeight: "bold",
+                      "&:hover": {
+                        backgroundColor: "#b88c2e",
                       },
-                      '&:disabled': {
-                        backgroundColor: '#7c6320',
-                        color: 'rgba(255, 255, 255, 0.7)',
+                      "&:disabled": {
+                        backgroundColor: "#7c6320",
+                        color: "rgba(255, 255, 255, 0.7)",
                       },
                     }}
                   >
                     {loading ? (
                       <CircularProgress size={24} color="inherit" />
                     ) : (
-                      'Reset Password'
+                      "Reset Password"
                     )}
                   </Button>
                 </form>
